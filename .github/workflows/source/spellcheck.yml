@@ -7,5 +7,5 @@ jobs:
   spellcheck:
     runs-on: ubuntu-latest
     steps:
-    - name: Spellcheck
-        uses: codespell-project/actions-codespell@v2
+      - name: Spellcheck
+          uses: codespell-project/actions-codespell@v2

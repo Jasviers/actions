@@ -10,14 +10,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  Source:
+  Go:
     runs-on: ubuntu-latest
     steps:
+      # Source Stage
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Linting
-        uses: ./.github/workflows/source/go-linting.yml
+      - name: Linting (golangci-lint)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+          golangci-lint run
 
-      - name: Spell check
-        uses: ./.github/workflows/source/spellcheck.yml
+      - name: Spellcheck
+        uses: codespell-project/actions-codespell@v2
+
+      - name: SonarCloud Check
+        uses: sonarsource/sonarcloud-github-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

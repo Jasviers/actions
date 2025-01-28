@@ -17,10 +17,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Linting (golangci-lint)
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.17"
+
+      - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
-          golangci-lint run
+
+      - name: Run golangci-lint
+        run: golangci-lint run
 
       - name: Spellcheck
         uses: codespell-project/actions-codespell@v2

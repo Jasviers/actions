@@ -17,3 +17,6 @@ jobs:
 
       - name: Linting
         uses: ./.github/workflows/source/go-linting.yml
+
+      - name: Spell check
+        uses: ./.github/workflows/source/spellcheck.yml

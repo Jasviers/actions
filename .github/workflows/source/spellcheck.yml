@@ -1,0 +1,11 @@
+name: Spell check
+
+on:
+  workflow_call:
+
+jobs:
+  spellcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Spellcheck
+        uses: codespell-project/actions-codespell@v2

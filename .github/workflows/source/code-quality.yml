@@ -1,0 +1,11 @@
+name: Code quality
+
+on:
+  workflow_call:
+
+jobs:
+  codeQuality:
+    - name: SonarCloud Check
+        uses: sonarsource/sonarcloud-github-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

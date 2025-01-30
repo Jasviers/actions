@@ -8,6 +8,7 @@ on:
     branches:
       - "*"
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   Go:
@@ -36,3 +37,10 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Snyk Check
+        uses: snyk/actions@master
+        with:
+          args: --file=go.mod
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

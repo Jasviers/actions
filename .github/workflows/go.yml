@@ -37,8 +37,11 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          sonar.projectKey: "jasviers"
-          sonar.organization: "lakasa"
+        with:
+          args: >
+            -Dsonar.projectKey={{ env.REPO_NAME }}
+            -Dsonar.organization="jasviers"
+            -Dsonar.host.url=https://sonarcloud.io
 
       - name: Snyk Check
         uses: snyk/actions@master

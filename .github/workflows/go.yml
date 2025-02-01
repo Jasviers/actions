@@ -40,7 +40,7 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.organization="jasviers"
+            -Dsonar.organization=jasviers
             -Dsonar.host.url=https://sonarcloud.io
 
       - name: Snyk Check

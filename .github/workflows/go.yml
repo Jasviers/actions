@@ -42,10 +42,13 @@ jobs:
             -Dsonar.projectKey=jasviers_${{ github.event.repository.name }}
             -Dsonar.organization=jasviers
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.branch.name=${{ github.ref_name }}
+
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Snyk Check
-        uses: snyk/actions@master
-        with:
-          args: test --package-manager=gomodules
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --file=go.mod

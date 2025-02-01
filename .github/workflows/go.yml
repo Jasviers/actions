@@ -39,7 +39,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.projectKey=jasviers_${{ github.event.repository.name }}
             -Dsonar.organization=jasviers
             -Dsonar.host.url=https://sonarcloud.io
 

@@ -46,6 +46,6 @@ jobs:
       - name: Snyk Check
         uses: snyk/actions@master
         with:
-          args: --file=go.mod
+          args: test --package-manager=gomodules
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

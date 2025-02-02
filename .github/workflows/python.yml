@@ -43,6 +43,9 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.branch.name=${{ github.ref_name }}
 
+      - name: Install python dependencies
+        run: pip install -r requirements.txt
+
       - name: Install Snyk
         run: npm install -g snyk
 

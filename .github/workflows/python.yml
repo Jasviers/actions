@@ -77,5 +77,15 @@ jobs:
             pytest --cov=.
           fi
 
+      - name: Extraer nombre de la etiqueta
+        id: extract_tag
+        run: |
+          BRANCH_NAME=${{ github.ref_name }}
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          else
+            echo "TAG=${BRANCH_NAME#*/}" >> $GITHUB_ENV
+          fi
+
       - name: Build Docker Image
-        run: docker build -t ${{ github.event.repository.name }} .
+        run: docker build -t ${{ github.event.repository.name }}:$TAG .

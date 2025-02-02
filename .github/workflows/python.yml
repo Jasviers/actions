@@ -1,4 +1,4 @@
-name: Go pipeline
+name: Python pipeline
 
 on:
   push:
@@ -18,17 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          go-version: "1.17"
+          python-version: "3.13"
 
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+      - name: Install ruff
+        run: pip install ruff
 
-      - name: Run golangci-lint
-        run: golangci-lint run
+      - name: Run ruff lint
+        run: ruff check
 
       - name: Spellcheck
         uses: codespell-project/actions-codespell@v2
@@ -51,7 +50,7 @@ jobs:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Snyk Check
-        run: snyk test --file=go.mod
+        run: snyk test --file=requirements.txt
 
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master
@@ -64,20 +63,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          go-version: "1.17"
+          python-version: "3.13"
 
-      - name: Build Go Application
-        run: go build -o app
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
       - name: Run Unit Tests and Coverage
         run: |
           if [ -d test ] || [ -d tests ]; then
-            go test ./... -coverprofile=coverage.out
-            go tool cover -func=coverage.out | awk '/^total:/ { if ($3 < 80) exit 1; }'
+            pytest --cov=.
+          fi
+
+      - name: Extraer nombre de la etiqueta
+        id: extract_tag
+        run: |
+          BRANCH_NAME=${{ github.ref_name }}
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          else
+            echo "TAG=${BRANCH_NAME#*/}" >> $GITHUB_ENV
           fi
 
       - name: Build Docker Image
-        run: docker build -t ${{ github.event.repository.name }} .
+        run: docker build -t ${{ github.event.repository.name }}:$TAG .

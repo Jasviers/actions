@@ -1,0 +1,81 @@
+name: Python pipeline
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  SourceAnalysis:
+    runs-on: ubuntu-latest
+    steps:
+      # Source Stage
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff lint
+        run: ruff check
+
+      - name: Spellcheck
+        uses: codespell-project/actions-codespell@v2
+
+      - name: SonarQubeScan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=jasviers_${{ github.event.repository.name }}
+            -Dsonar.organization=jasviers
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.branch.name=${{ github.ref_name }}
+
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Snyk Check
+        run: snyk test --file=requirements.txt
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: false
+
+  BuildAndTest:
+    runs-on: ubuntu-latest
+    needs: SourceAnalysis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Unit Tests and Coverage
+        run: |
+          if [ -d test ] || [ -d tests ]; then
+            pytest --cov=.
+          fi
+
+      - name: Build Docker Image
+        run: docker build -t ${{ github.event.repository.name }} .

@@ -53,7 +53,6 @@ jobs:
       - name: Snyk Check
         run: snyk test --file=go.mod
 
-
   BuildAndTest:
     runs-on: ubuntu-latest
     needs: SourceAnalysis
@@ -82,3 +81,8 @@ jobs:
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master
         continue-on-error: false
+        with:
+          image-ref: "my-app:${{ github.event.repository.name }}"
+          format: "table"
+          exit-code: 1
+          severity: "HIGH,CRITICAL"

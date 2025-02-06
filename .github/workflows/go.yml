@@ -53,9 +53,6 @@ jobs:
       - name: Snyk Check
         run: snyk test --file=go.mod
 
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: false
 
   BuildAndTest:
     runs-on: ubuntu-latest
@@ -81,3 +78,7 @@ jobs:
 
       - name: Build Docker Image
         run: docker build -t ${{ github.event.repository.name }} .
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: false

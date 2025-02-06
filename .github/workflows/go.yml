@@ -82,7 +82,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         continue-on-error: false
         with:
-          image-ref: "my-app:${{ github.event.repository.name }}"
+          image-ref: "${{ github.event.repository.name }}"
           format: "table"
           exit-code: 1
           severity: "HIGH,CRITICAL"

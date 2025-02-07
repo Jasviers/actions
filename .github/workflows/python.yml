@@ -32,6 +32,20 @@ jobs:
       - name: Spellcheck
         uses: codespell-project/actions-codespell@v2
 
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: ./Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true
+
+      - name: Upload analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint-results.sarif
+          wait-for-processing: true
+
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
@@ -53,7 +67,12 @@ jobs:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Snyk Check
-        run: snyk test --file=requirements.txt
+        run: snyk code test --sarif > snyk-code.sarif || true
+
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
 
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master

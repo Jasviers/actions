@@ -1,0 +1,7 @@
+name: "Security Checks"
+description: "Check source code for security vulnerabilities using Snyk and Trivy"
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4

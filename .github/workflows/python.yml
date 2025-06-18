@@ -18,33 +18,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Check Quality
+        uses: Jasviers/actions/source-analysis/quality-checks@v1
         with:
-          python-version: "3.13"
-
-      - name: Install ruff
-        run: pip install ruff
-
-      - name: Run ruff lint
-        run: ruff check
-
-      - name: Spellcheck
-        uses: codespell-project/actions-codespell@v2
-
-      - name: Run hadolint
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: ./Dockerfile
-          format: sarif
-          output-file: hadolint-results.sarif
-          no-fail: true
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: hadolint-results.sarif
-          wait-for-processing: true
+          languaje: python
 
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@v4

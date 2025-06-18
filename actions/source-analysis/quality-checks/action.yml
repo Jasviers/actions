@@ -1,0 +1,250 @@
+name: 'Quality Checks'
+description: 'Run code quality checks for multiple programming languages'
+author: 'jasviers'
+
+inputs:
+  language:
+    description: 'Programming language (python, go, nodejs, terraform, none)'
+    required: true
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+  go-version:
+    description: 'Go version to use'
+    required: false
+    default: '1.21'
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+  terraform-version:
+    description: 'Terraform version to use'
+    required: false
+    default: 'latest'
+  skip-spellcheck:
+    description: 'Skip spellcheck step'
+    required: false
+    default: 'false'
+  skip-hadolint:
+    description: 'Skip Dockerfile linting'
+    required: false
+    default: 'false'
+  skip-markdown-checks:
+    description: 'Skip Markdown linting and formatting checks'
+    required: false
+    default: 'false'
+  dockerfile-path:
+    description: 'Path to Dockerfile'
+    required: false
+    default: './Dockerfile'
+
+outputs:
+  hadolint-sarif:
+    description: 'Path to hadolint SARIF results'
+    value: ${{ steps.hadolint.outputs.sarif-file }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Python Setup and Linting
+    - name: Set up Python
+      if: inputs.language == 'python'
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install ruff (Python)
+      if: inputs.language == 'python'
+      shell: bash
+      run: pip install ruff
+
+    - name: Run ruff lint (Python)
+      if: inputs.language == 'python'
+      shell: bash
+      run: ruff check
+
+    - name: Run ruff format check (Python)
+      if: inputs.language == 'python'
+      shell: bash
+      run: ruff format --check
+
+    # Go Setup and Linting
+    - name: Set up Go
+      if: inputs.language == 'go'
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Run golangci-lint (Go)
+      if: inputs.language == 'go'
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+
+    - name: Run go fmt check (Go)
+      if: inputs.language == 'go'
+      shell: bash
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted. Run 'go fmt ./...'"
+          gofmt -s -l .
+          exit 1
+        fi
+
+    - name: Run go vet (Go)
+      if: inputs.language == 'go'
+      shell: bash
+      run: go vet ./...
+
+    # Node.js Setup and Linting
+    - name: Set up Node.js
+      if: inputs.language == 'nodejs'
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies (Node.js)
+      if: inputs.language == 'nodejs'
+      shell: bash
+      run: npm ci
+
+    - name: Run ESLint (Node.js)
+      if: inputs.language == 'nodejs'
+      shell: bash
+      run: |
+        if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f eslint.config.js ]; then
+          npx eslint .
+        else
+          echo "No ESLint config found, skipping ESLint"
+        fi
+
+    - name: Run Prettier check (Node.js)
+      if: inputs.language == 'nodejs'
+      shell: bash
+      run: |
+        if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
+          npx prettier --check .
+        else
+          echo "No Prettier config found, skipping Prettier"
+        fi
+
+    # Terraform Setup and Linting
+    - name: Set up Terraform
+      if: inputs.language == 'terraform'
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+
+    - name: Run terraform fmt check (Terraform)
+      if: inputs.language == 'terraform'
+      shell: bash
+      run: terraform fmt -check -recursive
+
+    - name: Run terraform validate (Terraform)
+      if: inputs.language == 'terraform'
+      shell: bash
+      run: |
+        find . -name "*.tf" -type f -execdir terraform init -backend=false \;
+        find . -name "*.tf" -type f -execdir terraform validate \;
+
+    - name: Run tflint (Terraform)
+      if: inputs.language == 'terraform'
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: latest
+
+    - name: Run TFLint
+      if: inputs.language == 'terraform'
+      shell: bash
+      run: tflint --init && tflint
+
+    # Universal checks (apply to all languages including 'none')
+    - name: Spellcheck
+      if: inputs.skip-spellcheck == 'false'
+      uses: codespell-project/actions-codespell@v2
+
+    # Markdown checks
+    - name: Set up Node.js for Markdown checks
+      if: inputs.skip-markdown-checks == 'false'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install markdownlint-cli
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: npm install -g markdownlint-cli
+
+    - name: Run markdownlint
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: |
+        if [ -f .markdownlint.json ] || [ -f .markdownlint.jsonc ] || [ -f .markdownlint.yaml ] || [ -f .markdownlint.yml ]; then
+          markdownlint "**/*.md"
+        else
+          echo "No markdownlint config found, using default rules"
+          markdownlint "**/*.md" --config https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/.markdownlint.jsonc
+        fi
+
+    - name: Install markdown-link-check
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: npm install -g markdown-link-check
+
+    - name: Check markdown links
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: |
+        find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*" | while read -r file; do
+          echo "Checking links in: $file"
+          markdown-link-check "$file" --config .markdown-link-check.json || true
+        done
+
+    - name: Install prettier for Markdown formatting
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: npm install -g prettier
+
+    - name: Check Markdown formatting with Prettier
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: |
+        if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
+          prettier --check "**/*.md"
+        else
+          echo "No Prettier config found, using default settings"
+          prettier --check "**/*.md" --prose-wrap always --print-width 80
+        fi
+
+    - name: Run hadolint (Dockerfile linting)
+      id: hadolint
+      if: inputs.skip-hadolint == 'false'
+      uses: hadolint/hadolint-action@master
+      with:
+        dockerfile: ${{ inputs.dockerfile-path }}
+        format: sarif
+        output-file: hadolint-results.sarif
+        no-fail: true
+
+    - name: Check if hadolint results exist
+      id: check-hadolint
+      if: inputs.skip-hadolint == 'false'
+      shell: bash
+      run: |
+        if [ -f hadolint-results.sarif ]; then
+          echo "sarif-file=hadolint-results.sarif" >> $GITHUB_OUTPUT
+        else
+          echo "sarif-file=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload hadolint results to GitHub
+      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: hadolint-results.sarif
+        wait-for-processing: true

@@ -6,10 +6,10 @@ runs:
     - name: Check Quality
       uses: Jasviers/actions/source-analysis/quality-checks@v1
       with:
-        languaje: none
+        language: none
 
     - name: Make Release
-      uses: google-github-actions/release-please-action@v4
+      uses: googleapis/release-please-action@4.2.0
       with:
         release-type: simple
         changelog-types: >-

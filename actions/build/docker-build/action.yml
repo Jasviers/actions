@@ -1,0 +1,8 @@
+name: 'Docker build action'
+description: 'Create a Docker image from a Dockerfile'
+runs:
+  using: 'composite'
+  steps:
+    - name: Placeholder
+      shell: bash
+      run: echo "Docker build action - Work in Progress"

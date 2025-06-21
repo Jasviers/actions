@@ -1,0 +1,12 @@
+name: 'Compliance Checks'
+description: 'Run compliance and code analysis checks'
+inputs:
+  language:
+    description: 'Programming language'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Placeholder
+      shell: bash
+      run: echo "Compliance checks - Work in Progress"

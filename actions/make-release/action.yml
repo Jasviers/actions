@@ -1,16 +1,27 @@
 name: "Changelog Generator"
 description: "Generate a changelog based on commit messages"
+inputs:
+  token:
+    description: 'GitHub token'
+    required: false
+    default: ${{ github.token }}
 runs:
   using: "composite"
   steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
     - name: Check Quality
-      uses: Jasviers/actions/source-analysis/quality-checks@v1
+      uses: ./actions/source-analysis/quality-checks
       with:
         language: none
 
     - name: Make Release
-      uses: googleapis/release-please-action@4.2.0
+      uses: googleapis/release-please-action@v4
       with:
+        token: ${{ inputs.token }}
         release-type: simple
         changelog-types: >-
           [

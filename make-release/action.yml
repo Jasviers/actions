@@ -14,7 +14,7 @@ runs:
         fetch-depth: 0
 
     - name: Check Quality
-      uses: ./actions/source-analysis/quality-checks
+      uses: Jasviers/actions/source-analysis/quality-checks@v1
       with:
         language: none
 

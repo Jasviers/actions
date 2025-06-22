@@ -17,6 +17,7 @@ runs:
       uses: Jasviers/actions/source-analysis/quality-checks@v1
       with:
         language: none
+        skip-hadolint: 'true'
 
     - name: Make Release
       uses: googleapis/release-please-action@v4

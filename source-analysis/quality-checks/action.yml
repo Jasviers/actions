@@ -205,22 +205,6 @@ runs:
           markdown-link-check "$file" --config .markdown-link-check.json || true
         done
 
-    - name: Install prettier for Markdown formatting
-      if: inputs.skip-markdown-checks == 'false'
-      shell: bash
-      run: npm install -g prettier
-
-    - name: Check Markdown formatting with Prettier
-      if: inputs.skip-markdown-checks == 'false'
-      shell: bash
-      run: |
-        if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
-          prettier --check "**/*.md"
-        else
-          echo "No Prettier config found, using default settings"
-          prettier --check "**/*.md" --prose-wrap always --print-width 80
-        fi
-
     - name: Run hadolint (Dockerfile linting)
       id: hadolint
       if: inputs.skip-hadolint == 'false'

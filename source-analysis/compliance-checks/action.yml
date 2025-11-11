@@ -1,12 +1,62 @@
 name: 'Compliance Checks'
-description: 'Run compliance and code analysis checks'
+description: 'Run CodeQL compliance and security analysis for Python code'
+author: 'jasviers'
+
 inputs:
-  language:
-    description: 'Programming language'
-    required: true
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+  codeql-queries:
+    description: 'CodeQL query suite to use (security-and-quality, security-extended, or security-only)'
+    required: false
+    default: 'security-and-quality'
+  upload-sarif:
+    description: 'Upload SARIF results to GitHub Security'
+    required: false
+    default: 'true'
+
 runs:
   using: 'composite'
   steps:
-    - name: Placeholder
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        queries: ${{ inputs.codeql-queries }}
+
+    - name: Install Python dependencies
       shell: bash
-      run: echo "Compliance checks - Work in Progress"
+      run: |
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        if [ -f setup.py ]; then
+          pip install -e .
+        fi
+        if [ -f pyproject.toml ]; then
+          pip install -e .
+        fi
+
+    - name: Perform CodeQL Analysis
+      id: analyze
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:python"
+        output: codeql-results.sarif
+        upload: ${{ inputs.upload-sarif }}
+
+    - name: Upload SARIF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeql-sarif-results
+        path: codeql-results.sarif
+        retention-days: 30

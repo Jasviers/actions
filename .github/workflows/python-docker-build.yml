@@ -1,0 +1,27 @@
+name: Python & Docker pipeline
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      # Source Stage
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Quality
+        uses: Jasviers/actions/source-analysis/quality-checks@v1
+        with:
+          language: python
+
+      - name: Build Docker Image
+        uses: Jasviers/actions/build/docker-build@v1
+
+      - name: Check Compliance
+        uses: Jasviers/actions/source-analysis/compliance-checks@v1
+
+      - name: Check Security
+        uses: Jasviers/actions/source-analysis/security-checks@v1

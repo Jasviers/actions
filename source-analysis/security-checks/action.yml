@@ -5,3 +5,34 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Install Snyk
+      shell: bash
+      run: npm install -g snyk
+
+    - name: Authenticate Snyk
+      shell: bash
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+    - name: Snyk Check
+      shell: bash
+      run: snyk code test --sarif > snyk-code.sarif || true
+
+    - name: Upload result to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: snyk-code.sarif
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: "${{ steps.meta.outputs.tags }}"
+        format: "template"
+        template: "@/contrib/sarif.tpl"
+        output: "trivy-results.sarif"
+        severity: "CRITICAL,HIGH"
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: "trivy-results.sarif"

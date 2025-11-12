@@ -7,6 +7,10 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
     steps:
       # Source Stage
       - name: Checkout
@@ -19,6 +23,8 @@ jobs:
 
       - name: Build Docker Image
         uses: Jasviers/actions/build/docker-build@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Compliance
         uses: Jasviers/actions/source-analysis/compliance-checks@v1

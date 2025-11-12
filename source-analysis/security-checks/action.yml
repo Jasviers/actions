@@ -1,5 +1,11 @@
 name: "Security Checks"
 description: "Check source code for security vulnerabilities using Snyk and Trivy"
+
+inputs:
+  snyk-token:
+    description: 'Snyk token for authentication'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -12,7 +18,7 @@ runs:
 
     - name: Authenticate Snyk
       shell: bash
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      run: snyk auth ${{ inputs.snyk-token }}
 
     - name: Snyk Check
       shell: bash

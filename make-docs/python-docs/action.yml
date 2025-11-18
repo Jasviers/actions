@@ -1,0 +1,49 @@
+name: 'Python Documentation Generator'
+description: 'Generate Python project documentation using Sphinx'
+author: 'jasviers'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Sphinx and dependencies
+      shell: bash
+      run: |
+        pip install sphinx sphinx-rtd-theme
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        if [ -f setup.py ]; then
+          pip install -e .
+        fi
+        if [ -f pyproject.toml ]; then
+          pip install -e .
+        fi  
+
+    - name: Generate Documentation
+      shell: bash
+      run: |
+        if [ -d docs ]; then
+          sphinx-build -b html docs/ docs/_build/html
+        else
+          echo "No docs directory found."
+        fi
+
+    - name: Upload Documentation as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-documentation
+        path: docs/_build/html 

@@ -32,3 +32,8 @@ jobs:
         uses: Jasviers/actions/source-analysis/security-checks@v1
         with:
           snyk-token: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Generate Documentation
+        uses: Jasviers/actions/make-docs/python-docs@v1
+        with:
+          python-version: "3.13"

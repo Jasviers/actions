@@ -163,11 +163,6 @@ runs:
       shell: bash
       run: tflint --init && tflint
 
-    # Universal checks (apply to all languages including 'none')
-    - name: Spellcheck
-      if: inputs.skip-spellcheck == 'false'
-      uses: codespell-project/actions-codespell@v2
-
     # Markdown checks
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'

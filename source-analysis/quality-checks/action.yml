@@ -223,7 +223,7 @@ runs:
 
     - name: Upload hadolint results to GitHub
       if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: hadolint-results.sarif
         wait-for-processing: true

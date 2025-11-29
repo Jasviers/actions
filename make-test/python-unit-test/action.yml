@@ -1,0 +1,70 @@
+name: 'Python Unit Tests'
+description: 'Run Python unit tests using pytest'
+author: 'jasviers'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+  test-directory:
+    description: 'Directory containing tests'
+    required: false
+    default: 'tests'
+  pytest-args:
+    description: 'Additional pytest arguments'
+    required: false
+    default: '-v --cov --cov-report=xml --cov-report=term'
+
+outputs:
+  coverage-file:
+    description: 'Path to coverage report'
+    value: 'coverage.xml'
+  test-results:
+    description: 'Test execution results'
+    value: ${{ steps.run-tests.outcome }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install pytest and coverage
+      shell: bash
+      run: |
+        pip install pytest pytest-cov
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        if [ -f setup.py ]; then
+          pip install -e .
+        fi
+        if [ -f pyproject.toml ]; then
+          pip install -e .
+        fi
+
+    - name: Run tests
+      id: run-tests
+      shell: bash
+      run: |
+        pytest ${{ inputs.test-directory }} ${{ inputs.pytest-args }}
+
+    - name: Upload coverage to artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: |
+          coverage.xml
+          htmlcov/
+        retention-days: 30

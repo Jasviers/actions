@@ -38,6 +38,10 @@ inputs:
     description: 'Path to Dockerfile'
     required: false
     default: './Dockerfile'
+  github-token:
+    description: 'GitHub token for uploading SARIF results'
+    required: false
+    default: ''
 
 outputs:
   hadolint-sarif:
@@ -168,7 +172,7 @@ runs:
       if: inputs.skip-markdown-checks == 'false'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '24'
 
     - name: Install markdownlint-cli
       if: inputs.skip-markdown-checks == 'false'
@@ -227,3 +231,5 @@ runs:
       with:
         sarif_file: hadolint-results.sarif
         wait-for-processing: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}

@@ -1,5 +1,5 @@
 name: 'Python Documentation Generator'
-description: 'Generate Python project documentation using Sphinx'
+description: 'Generate Python project documentation using Sphinx and deploy to GitHub Pages'
 author: 'jasviers'
 
 inputs:
@@ -7,6 +7,26 @@ inputs:
     description: 'Python version to use'
     required: false
     default: '3.13'
+  github-token:
+    description: 'GitHub token for uploading results and deploying to Pages'
+    required: false
+    default: ${{ github.token }}
+  project-name:
+    description: 'Project name for documentation'
+    required: false
+    default: ${{ github.event.repository.name }}
+  author:
+    description: 'Author name for documentation'
+    required: false
+    default: ${{ github.repository_owner }}
+  version:
+    description: 'Project version'
+    required: false
+    default: '1.0.0'
+  deploy-to-pages:
+    description: 'Deploy documentation to GitHub Pages'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -22,28 +42,48 @@ runs:
     - name: Install Sphinx and dependencies
       shell: bash
       run: |
-        pip install sphinx sphinx-rtd-theme
+        pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt
         fi
         if [ -f setup.py ]; then
-          pip install -e .
+          pip install -e . || true
         fi
         if [ -f pyproject.toml ]; then
-          pip install -e .
-        fi  
+          pip install -e . || true
+        fi
+
+    - name: Initialize Sphinx configuration
+      shell: bash
+      run: |
+        chmod +x ${{ github.action_path }}/init-sphinx.sh
+        ${{ github.action_path }}/init-sphinx.sh "${{ inputs.project-name }}" "${{ inputs.author }}" "${{ inputs.version }}"
 
     - name: Generate Documentation
       shell: bash
       run: |
-        if [ -d docs ]; then
-          sphinx-build -b html docs/ docs/_build/html
-        else
-          echo "No docs directory found."
-        fi
+        chmod +x ${{ github.action_path }}/generate-docs.sh
+        ${{ github.action_path }}/generate-docs.sh
 
     - name: Upload Documentation as artifact
       uses: actions/upload-artifact@v4
       with:
         name: python-documentation
-        path: docs/_build/html 
+        path: docs/_build/html
+
+    - name: Setup Pages
+      if: ${{ inputs.deploy-to-pages == 'true' }}
+      uses: actions/configure-pages@v4
+
+    - name: Upload to GitHub Pages
+      if: ${{ inputs.deploy-to-pages == 'true' }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/_build/html
+
+    - name: Deploy to GitHub Pages
+      if: ${{ inputs.deploy-to-pages == 'true' }}
+      id: deployment
+      uses: actions/deploy-pages@v4
+      with:
+        token: ${{ inputs.github-token }}

@@ -4,6 +4,17 @@ on:
   workflow_dispatch:
   workflow_call:
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  pages: write
+  id-token: write
+
 jobs:
   CI:
     runs-on: ubuntu-latest

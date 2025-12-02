@@ -33,5 +33,8 @@ sphinx-build -b html docs/ docs/_build/html -W --keep-going || sphinx-build -b h
 # Create .nojekyll file for GitHub Pages
 touch docs/_build/html/.nojekyll
 
+echo "📂 Generated documentation files:"
+ls -la docs/_build/html/
+
 echo "✅ Documentation generated successfully!"
 echo "📂 Output: docs/_build/html"

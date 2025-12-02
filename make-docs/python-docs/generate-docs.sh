@@ -19,8 +19,9 @@ fi
 echo "📁 Scanning Python modules in: $SRC_DIR"
 
 # Generate API documentation using sphinx-apidoc
+# Exclude patterns are positional arguments, not flags
 if [ "$SRC_DIR" = "." ]; then
-    sphinx-apidoc -f -o docs/ . --exclude-pattern="setup.py" --exclude-pattern="docs/*" --exclude-pattern="tests/*" --exclude-pattern="test_*"
+    sphinx-apidoc -f -o docs/ . "setup.py" "docs" "tests" "test_*" "venv" ".venv" "build" "dist"
 else
     sphinx-apidoc -f -o docs/ "$SRC_DIR"
 fi

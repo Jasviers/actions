@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.abspath('../${SRC_DIR}'))
 
 # -- Project information -----------------------------------------------------
 project = '${PROJECT_NAME}'
-copyright = '2024, ${AUTHOR}'
+copyright = '2025, ${AUTHOR}'
 author = '${AUTHOR}'
 version = '${VERSION}'
 release = '${VERSION}'
@@ -51,6 +51,7 @@ release = '${VERSION}'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -80,6 +81,7 @@ napoleon_numpy_docstring = True
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
+
 EOF
 
 # Create index.rst

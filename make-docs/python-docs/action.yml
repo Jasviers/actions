@@ -87,3 +87,9 @@ runs:
       uses: actions/deploy-pages@v4
       with:
         token: ${{ inputs.github-token }}
+
+    - name: Output Documentation URL
+      shell: bash
+      if: ${{ inputs.deploy-to-pages == 'true' }}
+      run: |
+        echo "Documentation deployed to: ${{ steps.deployment.outputs.page_url }}"

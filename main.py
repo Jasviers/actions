@@ -1,9 +1,14 @@
 import os
 
 
-def hello_wolrd():
-    """Hello world"""
+def hello_wolrd() -> str:
+    """Hello world
+    description: Prints Hello world to the console.
+    Returns:
+        str: Hello world
+    """
     print("Hello world")
+    return "Hello world"
 
 
 if __name__ == "__main__":

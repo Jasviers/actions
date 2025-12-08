@@ -30,10 +30,17 @@ runs:
 
     - name: Upload result to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
       with:
         sarif_file: snyk-code.sarif
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Upload Snyk artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: snyk-sarif
+        path: snyk-code.sarif
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -46,7 +53,14 @@ runs:
 
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
       with:
         sarif_file: "trivy-results.sarif"
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+  
+    - name: Upload Trivy SARIF artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: trivy-sarif
+        path: trivy-results.sarif

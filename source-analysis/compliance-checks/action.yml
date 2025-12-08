@@ -56,7 +56,17 @@ runs:
       with:
         category: "/language:python"
         output: codeql-results.sarif
-        upload: ${{ inputs.upload-sarif }}
+        upload: false
+
+    - name: Upload SARIF to GitHub Security
+      if: ${{ inputs.upload-sarif == 'true' && inputs.github-token != '' }}
+      uses: github/codeql-action/upload-sarif@v3
+      continue-on-error: true
+      with:
+        sarif_file: codeql-results.sarif
+        category: "/language:python"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Upload SARIF as artifact
       uses: actions/upload-artifact@v4

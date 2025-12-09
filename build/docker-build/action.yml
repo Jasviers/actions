@@ -18,6 +18,14 @@ inputs:
     required: false
     default: 'true'
 
+outputs:
+  image-tag:
+    description: 'Full image tag with registry'
+    value: ${{ steps.meta.outputs.tags }}
+  image-digest:
+    description: 'Image digest'
+    value: ${{ steps.build-and-push.outputs.digest }}
+
 runs:
   using: 'composite'
   steps:

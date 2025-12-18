@@ -10,7 +10,7 @@ inputs:
   test-directory:
     description: 'Directory containing tests'
     required: false
-    default: 'tests'
+    default: 'test'
   pytest-args:
     description: 'Additional pytest arguments'
     required: false
@@ -27,18 +27,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-
-    - name: Install pytest and coverage
-      shell: bash
-      run: |
-        pip install pytest pytest-cov
 
     - name: Install dependencies
       shell: bash
@@ -50,7 +42,7 @@ runs:
           pip install -e .
         fi
         if [ -f pyproject.toml ]; then
-          pip install -e .
+          pip install -e ".[dev]"
         fi
 
     - name: Run tests

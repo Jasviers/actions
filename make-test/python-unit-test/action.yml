@@ -15,6 +15,10 @@ inputs:
     description: 'Additional pytest arguments'
     required: false
     default: '-v --cov --cov-report=xml --cov-report=term'
+  github-token:
+    description: 'GitHub token for uploading SARIF results'
+    required: false
+    default: ''
 
 outputs:
   coverage-file:
@@ -55,6 +59,7 @@ runs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
+        github-token: ${{ inputs.github-token }}
         name: coverage-report
         path: |
           coverage.xml

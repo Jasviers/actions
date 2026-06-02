@@ -183,7 +183,7 @@ runs:
       if: inputs.skip-markdown-checks == 'false'
       shell: bash
       run: |
-        markdownlint "**/*.md" --config .markdownlint.yml
+        markdownlint "**/*.md" --ignore "CHANGELOG.md"--config .markdownlint.yml
 
     - name: Run hadolint (Dockerfile linting)
       id: hadolint

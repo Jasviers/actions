@@ -1,0 +1,36 @@
+name: Python upload docs pipeline
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  pages: write
+  id-token: write
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Quality
+        uses: Jasviers/actions/source-analysis/quality-checks@v1
+        with:
+          language: python
+
+      - name: Generate Documentation
+        uses: Jasviers/actions/make-docs/python-docs@v1

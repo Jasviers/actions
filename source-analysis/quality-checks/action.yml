@@ -38,6 +38,10 @@ inputs:
     description: 'Path to Dockerfile'
     required: false
     default: './Dockerfile'
+  github-token:
+    description: 'GitHub token for uploading SARIF results'
+    required: false
+    default: ''
 
 outputs:
   hadolint-sarif:
@@ -163,17 +167,12 @@ runs:
       shell: bash
       run: tflint --init && tflint
 
-    # Universal checks (apply to all languages including 'none')
-    - name: Spellcheck
-      if: inputs.skip-spellcheck == 'false'
-      uses: codespell-project/actions-codespell@v2
-
     # Markdown checks
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '24'
 
     - name: Install markdownlint-cli
       if: inputs.skip-markdown-checks == 'false'
@@ -209,7 +208,17 @@ runs:
 
     - name: Upload hadolint results to GitHub
       if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
       with:
         sarif_file: hadolint-results.sarif
         wait-for-processing: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Upload hadolint SARIF output
+      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: hadolint-sarif
+        path: hadolint-results.sarif

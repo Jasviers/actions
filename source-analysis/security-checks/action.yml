@@ -1,7 +1,70 @@
-name: "Security Checks"
-description: "Check source code for security vulnerabilities using Snyk and Trivy"
+name: Security Checks
+description: Check source code for security vulnerabilities using Snyk and Trivy
+
+inputs:
+  snyk-token:
+    description: Snyk token for authentication
+    required: true
+  github-token:
+    description: GitHub token for uploading SARIF results
+    required: false
+    default: ''
+  docker-image:
+    description: Docker image reference for Trivy scan
+    required: false
+    default: ''
+
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Install Snyk
+      shell: bash
+      run: npm install -g snyk
+
+    - name: Authenticate Snyk
+      shell: bash
+      run: snyk auth ${{ inputs.snyk-token }}
+
+    - name: Snyk Check
+      shell: bash
+      run: snyk code test --sarif > snyk-code.sarif || true
+
+    - name: Upload result to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: snyk-code.sarif
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Upload Snyk artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: snyk-sarif
+        path: snyk-code.sarif
+
+    - name: Run Trivy vulnerability scanner
+      if: inputs.docker-image != ''
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ inputs.docker-image }}
+        format: sarif
+        output: trivy-results.sarif
+        severity: CRITICAL,HIGH
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: trivy-results.sarif
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Upload Trivy SARIF artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-sarif
+        path: trivy-results.sarif

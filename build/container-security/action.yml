@@ -1,7 +1,0 @@
-name: "Build Security Checks"
-description: "Check if container images are secure and compliant with best practices"
-runs:
-  using: "composite"
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4

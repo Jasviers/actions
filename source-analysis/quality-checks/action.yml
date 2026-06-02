@@ -184,12 +184,7 @@ runs:
       if: inputs.skip-markdown-checks == 'false'
       shell: bash
       run: |
-        if [ -f .markdownlint.json ] || [ -f .markdownlint.jsonc ] || [ -f .markdownlint.yaml ] || [ -f .markdownlint.yml ]; then
-          markdownlint "**/*.md"
-        else
-          echo "No markdownlint config found, using default rules"
-          markdownlint "**/*.md" --config https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/.markdownlint.jsonc
-        fi
+        markdownlint "**/*.md" --config .markdownlint.yml
 
     - name: Install markdown-link-check
       if: inputs.skip-markdown-checks == 'false'

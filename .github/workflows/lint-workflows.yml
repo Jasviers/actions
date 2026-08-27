@@ -1,0 +1,44 @@
+name: Lint Workflows
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '**/action.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - '**/action.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run actionlint
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+        continue-on-error: true
+
+  zizmor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.6.2
+        continue-on-error: true

@@ -10,4 +10,4 @@ jobs:
     steps:
       # Source Stage
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7

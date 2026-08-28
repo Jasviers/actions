@@ -9,15 +9,15 @@ inputs:
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
   go-version:
     description: 'Go version to use'
     required: false
-    default: '1.21'
+    default: 'stable'
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: '20'
+    default: 'lts/*'
   terraform-version:
     description: 'Terraform version to use'
     required: false
@@ -52,12 +52,12 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     # Python Setup and Linting
     - name: Set up Python
       if: inputs.language == 'python'
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
@@ -79,13 +79,13 @@ runs:
     # Go Setup and Linting
     - name: Set up Go
       if: inputs.language == 'go'
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v7
       with:
         go-version: ${{ inputs.go-version }}
 
     - name: Run golangci-lint (Go)
       if: inputs.language == 'go'
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v9
       with:
         version: latest
 
@@ -107,7 +107,7 @@ runs:
     # Node.js Setup and Linting
     - name: Set up Node.js
       if: inputs.language == 'nodejs'
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
@@ -140,7 +140,7 @@ runs:
     # Terraform Setup and Linting
     - name: Set up Terraform
       if: inputs.language == 'terraform'
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v4
       with:
         terraform_version: ${{ inputs.terraform-version }}
 
@@ -158,7 +158,7 @@ runs:
 
     - name: Run tflint (Terraform)
       if: inputs.language == 'terraform'
-      uses: terraform-linters/setup-tflint@v4
+      uses: terraform-linters/setup-tflint@v6
       with:
         tflint_version: latest
 
@@ -170,9 +170,9 @@ runs:
     # Markdown checks
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
-        node-version: '24'
+        node-version: 'lts/*'
 
     - name: Install markdownlint-cli
       if: inputs.skip-markdown-checks == 'false'
@@ -188,7 +188,7 @@ runs:
     - name: Run hadolint (Dockerfile linting)
       id: hadolint
       if: inputs.skip-hadolint == 'false'
-      uses: hadolint/hadolint-action@master
+      uses: hadolint/hadolint-action@v3.5.0
       with:
         dockerfile: ${{ inputs.dockerfile-path }}
         format: sarif
@@ -218,7 +218,7 @@ runs:
 
     - name: Upload hadolint SARIF output
       if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: hadolint-sarif
         path: hadolint-results.sarif

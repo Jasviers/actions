@@ -6,7 +6,7 @@ inputs:
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
   codeql-queries:
     description: 'CodeQL query suite to use (security-and-quality, security-extended, or security-only)'
     required: false
@@ -24,15 +24,15 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: python
         queries: ${{ inputs.codeql-queries }}
@@ -52,7 +52,7 @@ runs:
 
     - name: Perform CodeQL Analysis
       id: analyze
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       continue-on-error: true
       with:
         category: "/language:python"
@@ -63,7 +63,7 @@ runs:
 
     - name: Upload SARIF to GitHub Security
       if: ${{ inputs.upload-sarif == 'true' && inputs.github-token != '' }}
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       continue-on-error: true
       with:
         sarif_file: codeql-results.sarif
@@ -72,7 +72,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Upload SARIF as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: codeql-sarif-results
         path: codeql-results.sarif

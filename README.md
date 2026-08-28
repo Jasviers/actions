@@ -23,8 +23,7 @@ A folder containing actions to analyze and improve the source code. It includes 
 A folder containing actions to build and secure containerized applications. It includes the following sub-actions:
 
 - **Docker-build**: (Details not provided in the repository, but intended for building Docker images efficiently and consistently.)
-- **Container-security**: Ensures that container images are secure and compliant with best practices by performing security checks during the build process.
 
-## Reutilizable workflows
+## Reusable workflows
 
   WIP

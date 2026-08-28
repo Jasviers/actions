@@ -34,6 +34,10 @@ inputs:
     description: 'Skip Markdown linting and formatting checks'
     required: false
     default: 'false'
+  skip-shellcheck:
+    description: 'Skip shellcheck on shell scripts'
+    required: false
+    default: 'false'
   dockerfile-path:
     description: 'Path to Dockerfile'
     required: false
@@ -184,6 +188,12 @@ runs:
       shell: bash
       run: |
         markdownlint "**/*.md" --ignore "CHANGELOG.md" --config .markdownlint.yml
+
+    - name: Run shellcheck
+      if: inputs.skip-shellcheck == 'false'
+      uses: ludeeus/action-shellcheck@2.0.0
+      with:
+        severity: warning
 
     - name: Run hadolint (Dockerfile linting)
       id: hadolint

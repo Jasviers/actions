@@ -3,6 +3,10 @@ description: 'Run CodeQL compliance and security analysis for Python code'
 author: 'jasviers'
 
 inputs:
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
@@ -36,9 +40,11 @@ runs:
       with:
         languages: python
         queries: ${{ inputs.codeql-queries }}
+        source-root: ${{ inputs.working-directory }}
 
     - name: Install Python dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt

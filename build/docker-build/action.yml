@@ -2,6 +2,10 @@ name: 'Docker build action'
 description: 'Create a Docker image from a Dockerfile'
 
 inputs:
+  working-directory:
+    description: 'Build context directory (relative to the checkout root)'
+    required: false
+    default: '.'
   registry:
     description: 'Container registry URL'
     required: false
@@ -50,7 +54,7 @@ runs:
       id: build-and-push
       uses: docker/build-push-action@v7
       with:
-        context: .
+        context: ${{ inputs.working-directory }}
         push: ${{ inputs.push }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

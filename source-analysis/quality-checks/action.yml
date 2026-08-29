@@ -6,6 +6,10 @@ inputs:
   language:
     description: 'Programming language (python, go, nodejs, terraform, none)'
     required: true
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
@@ -68,16 +72,19 @@ runs:
     - name: Install ruff (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: pip install ruff
 
     - name: Run ruff lint (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: ruff check
 
     - name: Run ruff format check (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: ruff format --check
 
     # Go Setup and Linting
@@ -92,10 +99,12 @@ runs:
       uses: golangci/golangci-lint-action@v9
       with:
         version: latest
+        working-directory: ${{ inputs.working-directory }}
 
     - name: Run go fmt check (Go)
       if: inputs.language == 'go'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
           echo "Code is not formatted. Run 'go fmt ./...'"
@@ -106,6 +115,7 @@ runs:
     - name: Run go vet (Go)
       if: inputs.language == 'go'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: go vet ./...
 
     # Node.js Setup and Linting
@@ -115,15 +125,18 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
     - name: Install dependencies (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: npm ci
 
     - name: Run ESLint (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f eslint.config.js ]; then
           npx eslint .
@@ -134,6 +147,7 @@ runs:
     - name: Run Prettier check (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
           npx prettier --check .
@@ -151,11 +165,13 @@ runs:
     - name: Run terraform fmt check (Terraform)
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: terraform fmt -check -recursive
 
     - name: Run terraform validate (Terraform)
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         find . -name "*.tf" -type f -execdir terraform init -backend=false \;
         find . -name "*.tf" -type f -execdir terraform validate \;
@@ -169,9 +185,9 @@ runs:
     - name: Run TFLint
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: tflint --init && tflint
 
-    # Markdown checks
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'
       uses: actions/setup-node@v7

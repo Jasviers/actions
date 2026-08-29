@@ -3,6 +3,10 @@ description: 'Generate Python project documentation using Sphinx and deploy to G
 author: 'jasviers'
 
 inputs:
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
@@ -41,6 +45,7 @@ runs:
 
     - name: Install Sphinx and dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
         if [ -f requirements.txt ]; then
@@ -55,12 +60,14 @@ runs:
 
     - name: Initialize Sphinx configuration
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         chmod +x ${{ github.action_path }}/init-sphinx.sh
         ${{ github.action_path }}/init-sphinx.sh "${{ inputs.project-name }}" "${{ inputs.author }}" "${{ inputs.version }}"
 
     - name: Generate Documentation
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         chmod +x ${{ github.action_path }}/generate-docs.sh
         ${{ github.action_path }}/generate-docs.sh
@@ -73,7 +80,7 @@ runs:
       if: ${{ inputs.deploy-to-pages == 'true' }}
       uses: actions/upload-pages-artifact@v5
       with:
-        path: docs/_build/html
+        path: ${{ inputs.working-directory }}/docs/_build/html
 
     - name: Deploy to GitHub Pages
       if: ${{ inputs.deploy-to-pages == 'true' }}

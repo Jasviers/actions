@@ -2,6 +2,10 @@ name: Security Checks
 description: Check source code for security vulnerabilities using Trivy
 
 inputs:
+  working-directory:
+    description: Directory containing the project source (relative to the checkout root)
+    required: false
+    default: '.'
   github-token:
     description: GitHub token for uploading SARIF results
     required: false
@@ -21,7 +25,7 @@ runs:
       uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: fs
-        scan-ref: .
+        scan-ref: ${{ inputs.working-directory }}
         format: sarif
         output: trivy-fs-results.sarif
         severity: CRITICAL,HIGH

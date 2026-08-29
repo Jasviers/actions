@@ -5,6 +5,23 @@ inputs:
     description: 'GitHub token'
     required: false
     default: ${{ github.token }}
+  config-file:
+    description: 'Path to the release-please config file, relative to the checkout root'
+    required: false
+    default: 'release-please-config.json'
+  manifest-file:
+    description: 'Path to the release-please manifest file, relative to the checkout root'
+    required: false
+    default: '.release-please-manifest.json'
+
+outputs:
+  release-created:
+    description: 'Whether a release was created on this run'
+    value: ${{ steps.release-please.outputs.release_created }}
+  tag-name:
+    description: 'Tag name of the release created on this run, if any'
+    value: ${{ steps.release-please.outputs.tag_name }}
+
 runs:
   using: "composite"
   steps:
@@ -19,7 +36,22 @@ runs:
         language: none
         skip-hadolint: 'true'
 
+    - name: Verify release-please config exists
+      shell: bash
+      run: |
+        if [ ! -f "${{ inputs.config-file }}" ]; then
+          echo "::error::release-please config file not found at '${{ inputs.config-file }}'. Every repo using make-release needs its own release-please-config.json and .release-please-manifest.json at its root (or point config-file/manifest-file at a custom path)."
+          exit 1
+        fi
+        if [ ! -f "${{ inputs.manifest-file }}" ]; then
+          echo "::error::release-please manifest file not found at '${{ inputs.manifest-file }}'."
+          exit 1
+        fi
+
     - name: Make Release
+      id: release-please
       uses: googleapis/release-please-action@v5
       with:
         token: ${{ inputs.token }}
+        config-file: ${{ inputs.config-file }}
+        manifest-file: ${{ inputs.manifest-file }}

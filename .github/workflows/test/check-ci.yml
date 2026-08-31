@@ -22,6 +22,6 @@ jobs:
       working-directory: test/fixtures/${{ matrix.language }}
       dockerfile-path: test/fixtures/${{ matrix.language }}/Dockerfile
       run-docker-build: ${{ matrix.language == 'python' }}
-      run-tests: ${{ matrix.language == 'python' }}
+      run-tests: ${{ matrix.language != 'terraform' }}
       skip-hadolint: ${{ matrix.language != 'python' }}
     secrets: inherit

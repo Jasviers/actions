@@ -4,75 +4,75 @@ on:
   workflow_call:
     inputs:
       language:
-        description: 'Programming language (python, go, nodejs, terraform, none)'
+        description: "Programming language (python, go, nodejs, terraform, none)"
         required: true
         type: string
       working-directory:
-        description: 'Directory containing the project source, relative to the checkout root'
+        description: "Directory containing the project source, relative to the checkout root"
         required: false
         type: string
-        default: '.'
+        default: "."
       run-docker-build:
-        description: 'Build (and push) a Docker image'
+        description: "Build (and push) a Docker image"
         required: false
         type: boolean
         default: true
       run-compliance-checks:
-        description: 'Run CodeQL compliance checks (Python only for now)'
+        description: "Run CodeQL compliance checks (python, go, nodejs — CodeQL has no Terraform/HCL support)"
         required: false
         type: boolean
         default: true
       run-security-checks:
-        description: 'Run Trivy security checks'
+        description: "Run Trivy security checks"
         required: false
         type: boolean
         default: true
       run-tests:
-        description: 'Run the unit test suite (Python only for now)'
+        description: "Run the unit test suite (python, go, nodejs — no terraform equivalent yet)"
         required: false
         type: boolean
         default: true
       docker-registry:
         required: false
         type: string
-        default: 'ghcr.io'
+        default: "ghcr.io"
       docker-image-name:
-        description: 'Image name, defaults to the repository name if left empty'
+        description: "Image name, defaults to the repository name if left empty"
         required: false
         type: string
-        default: ''
+        default: ""
       dockerfile-path:
         required: false
         type: string
-        default: './Dockerfile'
+        default: "./Dockerfile"
       python-version:
         required: false
         type: string
-        default: '3.x'
+        default: "3.x"
       go-version:
         required: false
         type: string
-        default: 'stable'
+        default: "stable"
       node-version:
         required: false
         type: string
-        default: 'lts/*'
+        default: "lts/*"
       terraform-version:
         required: false
         type: string
-        default: 'latest'
+        default: "latest"
       test-directory:
         required: false
         type: string
-        default: 'test'
+        default: "test"
       pytest-args:
         required: false
         type: string
-        default: '-v --cov --cov-report=xml --cov-report=term'
+        default: "-v --cov --cov-report=xml --cov-report=term"
       codeql-queries:
         required: false
         type: string
-        default: 'security-and-quality'
+        default: "security-and-quality"
       skip-hadolint:
         required: false
         type: boolean
@@ -87,10 +87,10 @@ on:
         default: false
     outputs:
       image-tag:
-        description: 'Full image tag with registry (empty if run-docker-build was false)'
+        description: "Full image tag with registry (empty if run-docker-build was false)"
         value: ${{ jobs.ci.outputs.image-tag }}
       image-digest:
-        description: 'Image digest (empty if run-docker-build was false)'
+        description: "Image digest (empty if run-docker-build was false)"
         value: ${{ jobs.ci.outputs.image-digest }}
 
 permissions:
@@ -133,14 +133,14 @@ jobs:
           image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Compliance and unit-test coverage are Python-only until Fase 5b builds
-      # go/nodejs/terraform equivalents and compliance-checks gains a `language` input.
       - name: Check Compliance
-        if: inputs.run-compliance-checks && inputs.language == 'python'
+        if: inputs.run-compliance-checks && inputs.language != 'terraform' && inputs.language != 'none'
         uses: Jasviers/actions/source-analysis/compliance-checks@v1
         with:
+          language: ${{ inputs.language }}
           working-directory: ${{ inputs.working-directory }}
           python-version: ${{ inputs.python-version }}
+          go-version: ${{ inputs.go-version }}
           codeql-queries: ${{ inputs.codeql-queries }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -152,7 +152,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           docker-image: ${{ inputs.run-docker-build && steps.docker_build.outputs.image-tag || '' }}
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests (Python)
         if: inputs.run-tests && inputs.language == 'python'
         uses: Jasviers/actions/make-test/python-unit-test@v1
         with:
@@ -160,3 +160,17 @@ jobs:
           python-version: ${{ inputs.python-version }}
           test-directory: ${{ inputs.test-directory }}
           pytest-args: ${{ inputs.pytest-args }}
+
+      - name: Run Unit Tests (Go)
+        if: inputs.run-tests && inputs.language == 'go'
+        uses: Jasviers/actions/make-test/go-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          go-version: ${{ inputs.go-version }}
+
+      - name: Run Unit Tests (Node.js)
+        if: inputs.run-tests && inputs.language == 'nodejs'
+        uses: Jasviers/actions/make-test/nodejs-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          node-version: ${{ inputs.node-version }}

@@ -42,3 +42,23 @@ jobs:
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@v0.6.2
         continue-on-error: true
+
+  action-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Check action READMEs are up to date
+        run: |
+          for action_yml in $(find . -mindepth 2 -name action.yml); do
+            dir=$(dirname "$action_yml")
+            [ -f "$dir/README.md" ] || continue
+            (cd "$dir" && npx --yes action-docs@2.5.1 --update-readme)
+          done
+          if ! git diff --exit-code -- '**/README.md'; then
+            echo "::error::One or more action READMEs are out of date. Run 'npx action-docs@2.5.1 --update-readme' inside the changed action's directory and commit the result."
+            exit 1
+          fi

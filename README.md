@@ -6,7 +6,7 @@ This repository contains a collection of GitHub Actions designed to streamline a
 
 ## Actions Catalog
 
-### Make-release
+### [Make-release](make-release/README.md)
 
 This action ensures the quality of the source code before generating a changelog and creating a release. It leverages quality checks to maintain high standards and uses `release-please-action` to automate the release process.
 
@@ -14,19 +14,23 @@ This action ensures the quality of the source code before generating a changelog
 
 A folder containing actions to analyze and improve the source code. It includes the following sub-actions:
 
-- **Quality-checks**: Performs code quality checks for multiple programming languages, including Python, Go, Node.js, Terraform, and Ansible (`ansible-lint` + `yamllint`). It also includes universal checks like Markdown linting, Dockerfile linting (hadolint), and shellcheck.
-- **Compliance-checks**: Runs CodeQL analysis for Python, Go, or Node.js (`language` input). CodeQL has no Terraform/HCL or Ansible/YAML support, so Terraform and Ansible pipelines skip this step.
-- **Security-checks**: Scans the source code and container images for vulnerabilities using Trivy (filesystem and image scans).
+- **[Quality-checks](source-analysis/quality-checks/README.md)**: Performs code quality checks for multiple programming languages, including Python, Go, Node.js, Terraform, and Ansible (`ansible-lint` + `yamllint`). It also includes universal checks like Markdown linting, Dockerfile linting (hadolint), and shellcheck.
+- **[Compliance-checks](source-analysis/compliance-checks/README.md)**: Runs CodeQL analysis for Python, Go, or Node.js (`language` input). CodeQL has no Terraform/HCL or Ansible/YAML support, so Terraform and Ansible pipelines skip this step.
+- **[Security-checks](source-analysis/security-checks/README.md)**: Scans the source code and container images for vulnerabilities using Trivy (filesystem and image scans).
 
 ### Build
 
 A folder containing actions to build and secure containerized applications. It includes the following sub-actions:
 
-- **Docker-build**: (Details not provided in the repository, but intended for building Docker images efficiently and consistently.)
+- **[Docker-build](build/docker-build/README.md)**: Builds and optionally pushes a Docker image with Buildx and GitHub Actions layer caching.
 
 ### Make-test
 
-Test runners, one per language: **python-unit-test** (pytest + coverage), **go-unit-test** (`go test` + coverage, optional minimum-coverage gate), **nodejs-unit-test** (runs an npm script, `test` by default), **ansible-unit-test** (`ansible-playbook --syntax-check`, plus `ansible-galaxy install` when a `requirements.yml` is present). No Terraform equivalent yet.
+Test runners, one per language: **[python-unit-test](make-test/python-unit-test/README.md)** (pytest + coverage), **[go-unit-test](make-test/go-unit-test/README.md)** (`go test` + coverage, optional minimum-coverage gate), **[nodejs-unit-test](make-test/nodejs-unit-test/README.md)** (runs an npm script, `test` by default), **[ansible-unit-test](make-test/ansible-unit-test/README.md)** (`ansible-playbook --syntax-check`, plus `ansible-galaxy install` when a `requirements.yml` is present). No Terraform equivalent yet.
+
+### [Make-docs/python-docs](make-docs/python-docs/README.md)
+
+Generates Sphinx API documentation for a Python project and, by default, deploys it to GitHub Pages.
 
 ## Reusable workflows
 

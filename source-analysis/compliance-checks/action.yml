@@ -4,7 +4,7 @@ author: 'jasviers'
 
 inputs:
   language:
-    description: 'Application language to analyze (python, go, nodejs) — CodeQL has no Terraform/HCL support'
+    description: 'Application language to analyze (python, go, nodejs) — CodeQL has no Terraform/HCL or Ansible/YAML support'
     required: false
     default: 'python'
   working-directory:
@@ -46,7 +46,7 @@ runs:
           python) echo "codeql-language=python" >> "$GITHUB_OUTPUT" ;;
           go) echo "codeql-language=go" >> "$GITHUB_OUTPUT" ;;
           nodejs) echo "codeql-language=javascript-typescript" >> "$GITHUB_OUTPUT" ;;
-          *) echo "::error::compliance-checks does not support language '${{ inputs.language }}' (CodeQL has no Terraform/HCL support)"; exit 1 ;;
+          *) echo "::error::compliance-checks does not support language '${{ inputs.language }}' (CodeQL has no Terraform/HCL or Ansible/YAML support)"; exit 1 ;;
         esac
 
     - name: Set up Python

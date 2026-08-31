@@ -4,7 +4,7 @@ author: 'jasviers'
 
 inputs:
   language:
-    description: 'Programming language (python, go, nodejs, terraform, none)'
+    description: 'Programming language (python, go, nodejs, terraform, ansible, none)'
     required: true
   working-directory:
     description: 'Directory containing the project source (relative to the checkout root)'
@@ -187,6 +187,31 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: tflint --init && tflint
+
+    # Ansible Setup and Linting
+    - name: Set up Python (Ansible)
+      if: inputs.language == 'ansible'
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install ansible-lint and yamllint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pip install ansible-lint yamllint
+
+    - name: Run yamllint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: yamllint .
+
+    - name: Run ansible-lint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ansible-lint
 
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'

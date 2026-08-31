@@ -26,6 +26,9 @@ crash.log
 override.tf
 override.tf.json
 
+# Ansible
+*.retry
+
 # Sphinx docs build output
 **/docs/_build/
 

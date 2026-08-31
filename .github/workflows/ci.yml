@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       language:
-        description: "Programming language (python, go, nodejs, terraform, none)"
+        description: "Programming language (python, go, nodejs, terraform, ansible, none)"
         required: true
         type: string
       working-directory:
@@ -18,7 +18,7 @@ on:
         type: boolean
         default: true
       run-compliance-checks:
-        description: "Run CodeQL compliance checks (python, go, nodejs — CodeQL has no Terraform/HCL support)"
+        description: "Run CodeQL compliance checks (python, go, nodejs — CodeQL has no Terraform/HCL or Ansible/YAML support)"
         required: false
         type: boolean
         default: true
@@ -28,7 +28,7 @@ on:
         type: boolean
         default: true
       run-tests:
-        description: "Run the unit test suite (python, go, nodejs — no terraform equivalent yet)"
+        description: "Run the test suite (python/go/nodejs unit tests, ansible-playbook --syntax-check — no terraform equivalent yet)"
         required: false
         type: boolean
         default: true
@@ -58,6 +58,10 @@ on:
         type: string
         default: "lts/*"
       terraform-version:
+        required: false
+        type: string
+        default: "latest"
+      ansible-version:
         required: false
         type: string
         default: "latest"
@@ -134,7 +138,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Compliance
-        if: inputs.run-compliance-checks && inputs.language != 'terraform' && inputs.language != 'none'
+        if: inputs.run-compliance-checks && inputs.language != 'terraform' && inputs.language != 'ansible' && inputs.language != 'none'
         uses: Jasviers/actions/source-analysis/compliance-checks@v1
         with:
           language: ${{ inputs.language }}
@@ -174,3 +178,11 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
           node-version: ${{ inputs.node-version }}
+
+      - name: Run Unit Tests (Ansible)
+        if: inputs.run-tests && inputs.language == 'ansible'
+        uses: Jasviers/actions/make-test/ansible-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          python-version: ${{ inputs.python-version }}
+          ansible-version: ${{ inputs.ansible-version }}

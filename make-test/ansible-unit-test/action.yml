@@ -1,0 +1,57 @@
+name: 'Ansible Syntax Check'
+description: 'Validate Ansible playbooks with ansible-playbook --syntax-check'
+author: 'jasviers'
+
+inputs:
+  working-directory:
+    description: 'Directory containing the Ansible project (relative to the checkout root)'
+    required: false
+    default: '.'
+  python-version:
+    description: 'Python version used to run Ansible'
+    required: false
+    default: '3.x'
+  ansible-version:
+    description: 'ansible-core version to install (latest installs the newest release)'
+    required: false
+    default: 'latest'
+  playbook:
+    description: 'Playbook file to syntax-check, relative to working-directory'
+    required: false
+    default: 'playbook.yml'
+
+outputs:
+  test-results:
+    description: 'Test execution results'
+    value: ${{ steps.run-tests.outcome }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Ansible
+      shell: bash
+      run: |
+        if [ "${{ inputs.ansible-version }}" = "latest" ]; then
+          pip install ansible-core
+        else
+          pip install "ansible-core==${{ inputs.ansible-version }}"
+        fi
+
+    - name: Install Galaxy requirements
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        if [ -f requirements.yml ]; then
+          ansible-galaxy install -r requirements.yml
+        fi
+
+    - name: Run syntax check
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ansible-playbook --syntax-check ${{ inputs.playbook }}

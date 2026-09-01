@@ -14,8 +14,8 @@ This action ensures the quality of the source code before generating a changelog
 
 A folder containing actions to analyze and improve the source code. It includes the following sub-actions:
 
-- **[Quality-checks](source-analysis/quality-checks/README.md)**: Performs code quality checks for multiple programming languages, including Python, Go, Node.js, Terraform, and Ansible (`ansible-lint` + `yamllint`). It also includes universal checks like Markdown linting, Dockerfile linting (hadolint), and shellcheck.
-- **[Compliance-checks](source-analysis/compliance-checks/README.md)**: Runs CodeQL analysis for Python, Go, or Node.js (`language` input). CodeQL has no Terraform/HCL or Ansible/YAML support, so Terraform and Ansible pipelines skip this step.
+- **[Quality-checks](source-analysis/quality-checks/README.md)**: Performs code quality checks for multiple programming languages, including Python, Go, Node.js, Terraform, Ansible (`ansible-lint`), and Kubernetes (`kubeconform` + `kube-linter`). It also includes universal checks like Markdown linting, YAML linting (yamllint), Dockerfile linting (hadolint), and shellcheck.
+- **[Compliance-checks](source-analysis/compliance-checks/README.md)**: Runs CodeQL analysis for Python, Go, or Node.js (`language` input). CodeQL has no Terraform/HCL, Ansible/YAML, or Kubernetes/YAML support, so those pipelines skip this step.
 - **[Security-checks](source-analysis/security-checks/README.md)**: Scans the source code and container images for vulnerabilities using Trivy (filesystem and image scans).
 
 ### Build
@@ -26,7 +26,7 @@ A folder containing actions to build and secure containerized applications. It i
 
 ### Make-test
 
-Test runners, one per language: **[python-unit-test](make-test/python-unit-test/README.md)** (pytest + coverage), **[go-unit-test](make-test/go-unit-test/README.md)** (`go test` + coverage, optional minimum-coverage gate), **[nodejs-unit-test](make-test/nodejs-unit-test/README.md)** (runs an npm script, `test` by default), **[ansible-unit-test](make-test/ansible-unit-test/README.md)** (`ansible-playbook --syntax-check`, plus `ansible-galaxy install` when a `requirements.yml` is present). No Terraform equivalent yet.
+Test runners, one per language: **[python-unit-test](make-test/python-unit-test/README.md)** (pytest + coverage), **[go-unit-test](make-test/go-unit-test/README.md)** (`go test` + coverage, optional minimum-coverage gate), **[nodejs-unit-test](make-test/nodejs-unit-test/README.md)** (runs an npm script, `test` by default), **[ansible-unit-test](make-test/ansible-unit-test/README.md)** (`ansible-playbook --syntax-check`, plus `ansible-galaxy install` when a `requirements.yml` is present). No Terraform or Kubernetes equivalent — for those, `quality-checks` (validate/tflint, kubeconform/kube-linter) already acts as the validation step.
 
 ### [Make-docs/python-docs](make-docs/python-docs/README.md)
 
@@ -55,11 +55,11 @@ jobs:
   ci:
     uses: Jasviers/actions/.github/workflows/ci.yml@v1
     with:
-      language: python   # python | go | nodejs | terraform | ansible | none
+      language: python   # python | go | nodejs | terraform | ansible | kubernetes | none
     secrets: inherit
 ```
 
-Key inputs: `language` (required), `working-directory` (default `.`, for monorepos), `run-docker-build`/`run-compliance-checks`/`run-security-checks`/`run-tests` (all default `true`). Compliance-checks (CodeQL) runs for `python`, `go`, and `nodejs`; `terraform` and `ansible` skip it (no CodeQL support). Tests run for `python`, `go`, `nodejs` (unit tests) and `ansible` (`ansible-playbook --syntax-check`); `terraform` has no test-runner action yet. Outputs `image-tag`/`image-digest` when a Docker build ran.
+Key inputs: `language` (required), `working-directory` (default `.`, for monorepos), `run-docker-build`/`run-compliance-checks`/`run-security-checks`/`run-tests` (all default `true`). Compliance-checks (CodeQL) runs for `python`, `go`, and `nodejs`; `terraform`, `ansible`, and `kubernetes` skip it (no CodeQL support). Tests run for `python`, `go`, `nodejs` (unit tests) and `ansible` (`ansible-playbook --syntax-check`); `terraform` and `kubernetes` have no separate test-runner action — their validation already happens in `quality-checks`. Outputs `image-tag`/`image-digest` when a Docker build ran.
 
 ### `release.yml`
 

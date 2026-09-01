@@ -4,7 +4,7 @@ author: 'jasviers'
 
 inputs:
   language:
-    description: 'Programming language (python, go, nodejs, terraform, ansible, none)'
+    description: 'Programming language (python, go, nodejs, terraform, ansible, kubernetes, none)'
     required: true
   working-directory:
     description: 'Directory containing the project source (relative to the checkout root)'
@@ -40,6 +40,10 @@ inputs:
     default: 'false'
   skip-shellcheck:
     description: 'Skip shellcheck on shell scripts'
+    required: false
+    default: 'false'
+  skip-yamllint:
+    description: 'Skip yamllint on YAML files (style/syntax only — no Kubernetes schema/best-practice checks)'
     required: false
     default: 'false'
   dockerfile-path:
@@ -213,6 +217,20 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: ansible-lint
 
+    # Kubernetes Setup and Linting
+    - name: Run kubeconform (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
+      with:
+        args: -summary -strict -ignore-missing-schemas ${{ inputs.working-directory }}
+
+    - name: Run kube-linter (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      uses: stackrox/kube-linter-action@v1
+      with:
+        directory: ${{ inputs.working-directory }}
+        version: '0.8.3'
+
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'
       uses: actions/setup-node@v7
@@ -229,6 +247,13 @@ runs:
       shell: bash
       run: |
         markdownlint "**/*.md" --ignore "CHANGELOG.md" --config .markdownlint.yml
+
+    - name: Run yamllint
+      if: inputs.skip-yamllint == 'false'
+      shell: bash
+      run: |
+        pip install yamllint
+        yamllint .
 
     - name: Run shellcheck
       if: inputs.skip-shellcheck == 'false'

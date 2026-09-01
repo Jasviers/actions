@@ -35,11 +35,13 @@ runs:
 
     - name: Install Ansible
       shell: bash
+      env:
+        ANSIBLE_VERSION: ${{ inputs.ansible-version }}
       run: |
-        if [ "${{ inputs.ansible-version }}" = "latest" ]; then
+        if [ "$ANSIBLE_VERSION" = "latest" ]; then
           pip install ansible-core
         else
-          pip install "ansible-core==${{ inputs.ansible-version }}"
+          pip install "ansible-core==$ANSIBLE_VERSION"
         fi
 
     - name: Install Galaxy requirements
@@ -54,4 +56,6 @@ runs:
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ansible-playbook --syntax-check ${{ inputs.playbook }}
+      env:
+        PLAYBOOK: ${{ inputs.playbook }}
+      run: ansible-playbook --syntax-check "$PLAYBOOK"

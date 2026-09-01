@@ -40,4 +40,6 @@ runs:
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: npm run ${{ inputs.test-script }}
+      env:
+        TEST_SCRIPT: ${{ inputs.test-script }}
+      run: npm run "$TEST_SCRIPT"

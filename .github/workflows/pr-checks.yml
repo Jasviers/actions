@@ -18,6 +18,8 @@ jobs:
 
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dependency-review:
     runs-on: ubuntu-latest

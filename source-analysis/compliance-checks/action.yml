@@ -41,12 +41,14 @@ runs:
     - name: Map language to CodeQL language
       id: map-language
       shell: bash
+      env:
+        LANGUAGE: ${{ inputs.language }}
       run: |
-        case "${{ inputs.language }}" in
+        case "$LANGUAGE" in
           python) echo "codeql-language=python" >> "$GITHUB_OUTPUT" ;;
           go) echo "codeql-language=go" >> "$GITHUB_OUTPUT" ;;
           nodejs) echo "codeql-language=javascript-typescript" >> "$GITHUB_OUTPUT" ;;
-          *) echo "::error::compliance-checks does not support language '${{ inputs.language }}' (CodeQL has no Terraform/HCL or Ansible/YAML support)"; exit 1 ;;
+          *) echo "::error::compliance-checks does not support language '$LANGUAGE' (CodeQL has no Terraform/HCL or Ansible/YAML support)"; exit 1 ;;
         esac
 
     - name: Set up Python

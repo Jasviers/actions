@@ -61,9 +61,13 @@ runs:
     - name: Initialize Sphinx configuration
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        PROJECT_NAME: ${{ inputs.project-name }}
+        AUTHOR: ${{ inputs.author }}
+        PROJECT_VERSION: ${{ inputs.version }}
       run: |
-        chmod +x ${{ github.action_path }}/init-sphinx.sh
-        ${{ github.action_path }}/init-sphinx.sh "${{ inputs.project-name }}" "${{ inputs.author }}" "${{ inputs.version }}"
+        chmod +x "${{ github.action_path }}/init-sphinx.sh"
+        "${{ github.action_path }}/init-sphinx.sh" "$PROJECT_NAME" "$AUTHOR" "$PROJECT_VERSION"
 
     - name: Generate Documentation
       shell: bash

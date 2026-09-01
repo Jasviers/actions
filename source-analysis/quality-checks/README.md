@@ -16,7 +16,7 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 
 | name | description | required | default |
 | --- | --- | --- | --- |
-| `language` | <p>Programming language (python, go, nodejs, terraform, ansible, none)</p> | `true` | `""` |
+| `language` | <p>Programming language (python, go, nodejs, terraform, ansible, kubernetes, none)</p> | `true` | `""` |
 | `working-directory` | <p>Directory containing the project source (relative to the checkout root)</p> | `false` | `.` |
 | `python-version` | <p>Python version to use</p> | `false` | `3.x` |
 | `go-version` | <p>Go version to use</p> | `false` | `stable` |
@@ -26,6 +26,7 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 | `skip-hadolint` | <p>Skip Dockerfile linting</p> | `false` | `false` |
 | `skip-markdown-checks` | <p>Skip Markdown linting and formatting checks</p> | `false` | `false` |
 | `skip-shellcheck` | <p>Skip shellcheck on shell scripts</p> | `false` | `false` |
+| `skip-yamllint` | <p>Skip yamllint on YAML files (style/syntax only — no Kubernetes schema/best-practice checks)</p> | `false` | `false` |
 | `dockerfile-path` | <p>Path to Dockerfile</p> | `false` | `./Dockerfile` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->

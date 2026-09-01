@@ -42,8 +42,10 @@ runs:
       if: inputs.min-coverage != '0'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        MIN_COVERAGE: ${{ inputs.min-coverage }}
       run: |
-        go tool cover -func=coverage.out | awk -v min="${{ inputs.min-coverage }}" '/^total:/ { if ($3+0 < min) { print "Coverage " $3 " is below minimum " min "%"; exit 1 } }'
+        go tool cover -func=coverage.out | awk -v min="$MIN_COVERAGE" '/^total:/ { if ($3+0 < min) { print "Coverage " $3 " is below minimum " min "%"; exit 1 } }'
 
     - name: Upload coverage artifact
       uses: actions/upload-artifact@v7

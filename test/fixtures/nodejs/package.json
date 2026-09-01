@@ -1,0 +1,10 @@
+{
+  "name": "actions-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal fixture used to smoke-test the nodejs.yml pipeline against this repo's own composite actions.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  }
+}

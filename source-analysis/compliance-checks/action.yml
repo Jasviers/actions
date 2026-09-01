@@ -1,12 +1,24 @@
 name: 'Compliance Checks'
-description: 'Run CodeQL compliance and security analysis for Python code'
+description: 'Run CodeQL compliance and security analysis'
 author: 'jasviers'
 
 inputs:
+  language:
+    description: 'Application language to analyze (python, go, nodejs) — CodeQL has no Terraform/HCL or Ansible/YAML support'
+    required: false
+    default: 'python'
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
+  go-version:
+    description: 'Go version to use'
+    required: false
+    default: 'stable'
   codeql-queries:
     description: 'CodeQL query suite to use (security-and-quality, security-extended, or security-only)'
     required: false
@@ -24,21 +36,54 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
+
+    - name: Map language to CodeQL language
+      id: map-language
+      shell: bash
+      env:
+        LANGUAGE: ${{ inputs.language }}
+      run: |
+        case "$LANGUAGE" in
+          python) echo "codeql-language=python" >> "$GITHUB_OUTPUT" ;;
+          go) echo "codeql-language=go" >> "$GITHUB_OUTPUT" ;;
+          nodejs) echo "codeql-language=javascript-typescript" >> "$GITHUB_OUTPUT" ;;
+          *) echo "::error::compliance-checks does not support language '$LANGUAGE' (CodeQL has no Terraform/HCL or Ansible/YAML support)"; exit 1 ;;
+        esac
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      if: inputs.language == 'python'
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+    - name: Set up Go
+      if: inputs.language == 'go'
+      uses: actions/setup-go@v7
       with:
-        languages: python
+        go-version: ${{ inputs.go-version }}
+
+    - name: Initialize CodeQL (interpreted languages)
+      if: inputs.language != 'go'
+      uses: github/codeql-action/init@v4
+      with:
+        languages: ${{ steps.map-language.outputs.codeql-language }}
         queries: ${{ inputs.codeql-queries }}
+        source-root: ${{ inputs.working-directory }}
+
+    - name: Initialize CodeQL (Go)
+      if: inputs.language == 'go'
+      uses: github/codeql-action/init@v4
+      with:
+        languages: go
+        queries: ${{ inputs.codeql-queries }}
+        source-root: ${{ inputs.working-directory }}
+        build-mode: autobuild
 
     - name: Install Python dependencies
+      if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt
@@ -52,10 +97,10 @@ runs:
 
     - name: Perform CodeQL Analysis
       id: analyze
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       continue-on-error: true
       with:
-        category: "/language:python"
+        category: "/language:${{ steps.map-language.outputs.codeql-language }}"
         output: codeql-results.sarif
         upload: false
       env:
@@ -63,16 +108,16 @@ runs:
 
     - name: Upload SARIF to GitHub Security
       if: ${{ inputs.upload-sarif == 'true' && inputs.github-token != '' }}
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       continue-on-error: true
       with:
         sarif_file: codeql-results.sarif
-        category: "/language:python"
+        category: "/language:${{ steps.map-language.outputs.codeql-language }}"
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Upload SARIF as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: codeql-sarif-results
         path: codeql-results.sarif

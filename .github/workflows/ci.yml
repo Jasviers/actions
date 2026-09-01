@@ -1,0 +1,199 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: "Programming language (python, go, nodejs, terraform, ansible, kubernetes, none)"
+        required: true
+        type: string
+      working-directory:
+        description: "Directory containing the project source, relative to the checkout root"
+        required: false
+        type: string
+        default: "."
+      run-docker-build:
+        description: "Build (and push) a Docker image"
+        required: false
+        type: boolean
+        default: true
+      run-compliance-checks:
+        description: "Run CodeQL compliance checks (python, go, nodejs — CodeQL has no Terraform/HCL, Ansible/YAML, or Kubernetes/YAML support)"
+        required: false
+        type: boolean
+        default: true
+      run-security-checks:
+        description: "Run Trivy security checks"
+        required: false
+        type: boolean
+        default: true
+      run-tests:
+        description: "Run the test suite (python/go/nodejs unit tests, ansible-playbook --syntax-check — no terraform equivalent yet)"
+        required: false
+        type: boolean
+        default: true
+      docker-registry:
+        required: false
+        type: string
+        default: "ghcr.io"
+      docker-image-name:
+        description: "Image name, defaults to the repository name if left empty"
+        required: false
+        type: string
+        default: ""
+      generate-sbom:
+        description: "Generate a Software Bill of Materials for the built image (only applies when run-docker-build is true)"
+        required: false
+        type: boolean
+        default: false
+      dockerfile-path:
+        required: false
+        type: string
+        default: "./Dockerfile"
+      python-version:
+        required: false
+        type: string
+        default: "3.x"
+      go-version:
+        required: false
+        type: string
+        default: "stable"
+      node-version:
+        required: false
+        type: string
+        default: "lts/*"
+      terraform-version:
+        required: false
+        type: string
+        default: "latest"
+      ansible-version:
+        required: false
+        type: string
+        default: "latest"
+      test-directory:
+        required: false
+        type: string
+        default: "test"
+      pytest-args:
+        required: false
+        type: string
+        default: "-v --cov --cov-report=xml --cov-report=term"
+      codeql-queries:
+        required: false
+        type: string
+        default: "security-and-quality"
+      skip-hadolint:
+        required: false
+        type: boolean
+        default: false
+      skip-markdown-checks:
+        required: false
+        type: boolean
+        default: false
+      skip-shellcheck:
+        required: false
+        type: boolean
+        default: false
+      skip-yamllint:
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      image-tag:
+        description: "Full image tag with registry (empty if run-docker-build was false)"
+        value: ${{ jobs.ci.outputs.image-tag }}
+      image-digest:
+        description: "Image digest (empty if run-docker-build was false)"
+        value: ${{ jobs.ci.outputs.image-digest }}
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.docker_build.outputs.image-tag }}
+      image-digest: ${{ steps.docker_build.outputs.image-digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Quality
+        uses: Jasviers/actions/source-analysis/quality-checks@v1
+        with:
+          language: ${{ inputs.language }}
+          working-directory: ${{ inputs.working-directory }}
+          python-version: ${{ inputs.python-version }}
+          go-version: ${{ inputs.go-version }}
+          node-version: ${{ inputs.node-version }}
+          terraform-version: ${{ inputs.terraform-version }}
+          dockerfile-path: ${{ inputs.dockerfile-path }}
+          skip-hadolint: ${{ inputs.skip-hadolint }}
+          skip-markdown-checks: ${{ inputs.skip-markdown-checks }}
+          skip-shellcheck: ${{ inputs.skip-shellcheck }}
+          skip-yamllint: ${{ inputs.skip-yamllint }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        id: docker_build
+        if: inputs.run-docker-build
+        uses: Jasviers/actions/build/docker-build@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          registry: ${{ inputs.docker-registry }}
+          image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
+          generate-sbom: ${{ inputs.generate-sbom }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Compliance
+        if: inputs.run-compliance-checks && inputs.language != 'terraform' && inputs.language != 'ansible' && inputs.language != 'kubernetes' && inputs.language != 'none'
+        uses: Jasviers/actions/source-analysis/compliance-checks@v1
+        with:
+          language: ${{ inputs.language }}
+          working-directory: ${{ inputs.working-directory }}
+          python-version: ${{ inputs.python-version }}
+          go-version: ${{ inputs.go-version }}
+          codeql-queries: ${{ inputs.codeql-queries }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Security
+        if: inputs.run-security-checks
+        uses: Jasviers/actions/source-analysis/security-checks@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          docker-image: ${{ inputs.run-docker-build && steps.docker_build.outputs.image-tag || '' }}
+
+      - name: Run Unit Tests (Python)
+        if: inputs.run-tests && inputs.language == 'python'
+        uses: Jasviers/actions/make-test/python-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          python-version: ${{ inputs.python-version }}
+          test-directory: ${{ inputs.test-directory }}
+          pytest-args: ${{ inputs.pytest-args }}
+
+      - name: Run Unit Tests (Go)
+        if: inputs.run-tests && inputs.language == 'go'
+        uses: Jasviers/actions/make-test/go-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          go-version: ${{ inputs.go-version }}
+
+      - name: Run Unit Tests (Node.js)
+        if: inputs.run-tests && inputs.language == 'nodejs'
+        uses: Jasviers/actions/make-test/nodejs-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          node-version: ${{ inputs.node-version }}
+
+      - name: Run Unit Tests (Ansible)
+        if: inputs.run-tests && inputs.language == 'ansible'
+        uses: Jasviers/actions/make-test/ansible-unit-test@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          python-version: ${{ inputs.python-version }}
+          ansible-version: ${{ inputs.ansible-version }}

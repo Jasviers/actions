@@ -3,10 +3,14 @@ description: 'Generate Python project documentation using Sphinx and deploy to G
 author: 'jasviers'
 
 inputs:
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
   github-token:
     description: 'GitHub token for uploading results and deploying to Pages'
     required: false
@@ -32,15 +36,16 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Install Sphinx and dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
         if [ -f requirements.txt ]; then
@@ -55,30 +60,36 @@ runs:
 
     - name: Initialize Sphinx configuration
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PROJECT_NAME: ${{ inputs.project-name }}
+        AUTHOR: ${{ inputs.author }}
+        PROJECT_VERSION: ${{ inputs.version }}
       run: |
-        chmod +x ${{ github.action_path }}/init-sphinx.sh
-        ${{ github.action_path }}/init-sphinx.sh "${{ inputs.project-name }}" "${{ inputs.author }}" "${{ inputs.version }}"
+        chmod +x "${{ github.action_path }}/init-sphinx.sh"
+        "${{ github.action_path }}/init-sphinx.sh" "$PROJECT_NAME" "$AUTHOR" "$PROJECT_VERSION"
 
     - name: Generate Documentation
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         chmod +x ${{ github.action_path }}/generate-docs.sh
         ${{ github.action_path }}/generate-docs.sh
 
     - name: Setup Pages
       if: ${{ inputs.deploy-to-pages == 'true' }}
-      uses: actions/configure-pages@v5
+      uses: actions/configure-pages@v6
 
     - name: Upload to GitHub Pages
       if: ${{ inputs.deploy-to-pages == 'true' }}
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v5
       with:
-        path: docs/_build/html
+        path: ${{ inputs.working-directory }}/docs/_build/html
 
     - name: Deploy to GitHub Pages
       if: ${{ inputs.deploy-to-pages == 'true' }}
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@v5
       with:
         token: ${{ inputs.github-token }}
 

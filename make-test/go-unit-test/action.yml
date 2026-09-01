@@ -1,0 +1,56 @@
+name: 'Go Unit Tests'
+description: 'Run Go unit tests using go test'
+author: 'jasviers'
+
+inputs:
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
+  go-version:
+    description: 'Go version to use'
+    required: false
+    default: 'stable'
+  min-coverage:
+    description: 'Minimum total coverage percentage required (0 disables the gate)'
+    required: false
+    default: '0'
+
+outputs:
+  coverage-file:
+    description: 'Path to coverage report'
+    value: 'coverage.out'
+  test-results:
+    description: 'Test execution results'
+    value: ${{ steps.run-tests.outcome }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Run tests
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: go test ./... -coverprofile=coverage.out
+
+    - name: Enforce minimum coverage
+      if: inputs.min-coverage != '0'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        MIN_COVERAGE: ${{ inputs.min-coverage }}
+      run: |
+        go tool cover -func=coverage.out | awk -v min="$MIN_COVERAGE" '/^total:/ { if ($3+0 < min) { print "Coverage " $3 " is below minimum " min "%"; exit 1 } }'
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: coverage-report
+        path: ${{ inputs.working-directory }}/coverage.out
+        retention-days: 30

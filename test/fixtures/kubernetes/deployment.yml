@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: actions-fixture
+  labels:
+    app: actions-fixture
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: actions-fixture
+  template:
+    metadata:
+      labels:
+        app: actions-fixture
+    spec:
+      containers:
+        - name: actions-fixture
+          image: busybox:1.36.1
+          command: ["sh", "-c", "echo 'hello from actions test fixture' && sleep 3600"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

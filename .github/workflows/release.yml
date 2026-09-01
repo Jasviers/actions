@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: 'Programming language, only used to gate the docs step for now (python only)'
+        required: false
+        type: string
+        default: 'python'
+      working-directory:
+        description: 'Directory containing the project source, relative to the checkout root'
+        required: false
+        type: string
+        default: '.'
+      config-file:
+        required: false
+        type: string
+        default: 'release-please-config.json'
+      manifest-file:
+        required: false
+        type: string
+        default: '.release-please-manifest.json'
+      run-docker-build:
+        required: false
+        type: boolean
+        default: true
+      run-docs:
+        required: false
+        type: boolean
+        default: true
+      docker-registry:
+        required: false
+        type: string
+        default: 'ghcr.io'
+      docker-image-name:
+        required: false
+        type: string
+        default: ''
+      generate-sbom:
+        description: 'Generate a Software Bill of Materials for the built image (only applies when run-docker-build is true)'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      release-created:
+        description: 'Whether a release was created on this run'
+        value: ${{ jobs.release.outputs.release-created }}
+      tag-name:
+        description: 'Tag name of the release created on this run, if any'
+        value: ${{ jobs.release.outputs.tag-name }}
+      image-tag:
+        description: 'Full image tag with registry (empty unless a release was created and run-docker-build was true)'
+        value: ${{ jobs.release.outputs.image-tag }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+  pages: write
+  id-token: write
+  security-events: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      release-created: ${{ steps.make_release.outputs.release-created }}
+      tag-name: ${{ steps.make_release.outputs.tag-name }}
+      image-tag: ${{ steps.docker_build.outputs.image-tag }}
+    steps:
+      - name: Make Release
+        id: make_release
+        uses: Jasviers/actions/make-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: ${{ inputs.config-file }}
+          manifest-file: ${{ inputs.manifest-file }}
+
+      - name: Build Docker Image
+        id: docker_build
+        if: steps.make_release.outputs.release-created == 'true' && inputs.run-docker-build
+        uses: Jasviers/actions/build/docker-build@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          registry: ${{ inputs.docker-registry }}
+          image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
+          generate-sbom: ${{ inputs.generate-sbom }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Documentation
+        if: steps.make_release.outputs.release-created == 'true' && inputs.run-docs && inputs.language == 'python'
+        uses: Jasviers/actions/make-docs/python-docs@v1
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

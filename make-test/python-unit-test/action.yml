@@ -3,10 +3,14 @@ description: 'Run Python unit tests using pytest'
 author: 'jasviers'
 
 inputs:
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
   test-directory:
     description: 'Directory containing tests'
     required: false
@@ -32,12 +36,13 @@ runs:
   using: 'composite'
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Install dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt
@@ -52,16 +57,19 @@ runs:
     - name: Run tests
       id: run-tests
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        TEST_DIRECTORY: ${{ inputs.test-directory }}
+        PYTEST_ARGS: ${{ inputs.pytest-args }}
       run: |
-        pytest ${{ inputs.test-directory }} ${{ inputs.pytest-args }}
+        pytest "$TEST_DIRECTORY" $PYTEST_ARGS
 
     - name: Upload coverage to artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
-        github-token: ${{ inputs.github-token }}
         name: coverage-report
         path: |
-          coverage.xml
-          htmlcov/
+          ${{ inputs.working-directory }}/coverage.xml
+          ${{ inputs.working-directory }}/htmlcov/
         retention-days: 30

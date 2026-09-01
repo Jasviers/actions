@@ -1,10 +1,11 @@
 name: Security Checks
-description: Check source code for security vulnerabilities using Snyk and Trivy
+description: Check source code for security vulnerabilities using Trivy
 
 inputs:
-  snyk-token:
-    description: Snyk token for authentication
-    required: true
+  working-directory:
+    description: Directory containing the project source (relative to the checkout root)
+    required: false
+    default: '.'
   github-token:
     description: GitHub token for uploading SARIF results
     required: false
@@ -18,53 +19,52 @@ runs:
   using: composite
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
-    - name: Install Snyk
-      shell: bash
-      run: npm install -g snyk
+    - name: Run Trivy filesystem scanner
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        scan-type: fs
+        scan-ref: ${{ inputs.working-directory }}
+        format: sarif
+        output: trivy-fs-results.sarif
+        severity: CRITICAL,HIGH
 
-    - name: Authenticate Snyk
-      shell: bash
-      run: snyk auth ${{ inputs.snyk-token }}
-
-    - name: Snyk Check
-      shell: bash
-      run: snyk code test --sarif > snyk-code.sarif || true
-
-    - name: Upload result to GitHub Code Scanning
+    - name: Upload Trivy fs scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
       continue-on-error: true
       with:
-        sarif_file: snyk-code.sarif
+        sarif_file: trivy-fs-results.sarif
+        category: trivy-fs
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
-    - name: Upload Snyk artifact
-      uses: actions/upload-artifact@v4
+    - name: Upload Trivy fs SARIF artifact
+      uses: actions/upload-artifact@v7
       with:
-        name: snyk-sarif
-        path: snyk-code.sarif
+        name: trivy-fs-sarif
+        path: trivy-fs-results.sarif
 
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy image scanner
       if: inputs.docker-image != ''
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: ${{ inputs.docker-image }}
         format: sarif
         output: trivy-results.sarif
         severity: CRITICAL,HIGH
 
-    - name: Upload Trivy scan results to GitHub Security tab
+    - name: Upload Trivy image scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
       continue-on-error: true
       with:
         sarif_file: trivy-results.sarif
+        category: trivy-image
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
-    - name: Upload Trivy SARIF artifact
-      uses: actions/upload-artifact@v4
+    - name: Upload Trivy image SARIF artifact
+      uses: actions/upload-artifact@v7
       with:
         name: trivy-sarif
         path: trivy-results.sarif

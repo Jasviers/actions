@@ -1,0 +1,8 @@
+---
+- name: Actions test fixture
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Print the fixture greeting
+      ansible.builtin.debug:
+        msg: hello from actions test fixture

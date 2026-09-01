@@ -1,4 +1,4 @@
-name: Node JS pipeline
+name: Kubernetes pipeline
 
 on:
   workflow_dispatch:
@@ -13,5 +13,6 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
     with:
-      language: nodejs
+      language: kubernetes
+      run-docker-build: false
     secrets: inherit

@@ -1,0 +1,27 @@
+name: Test CI Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'source-analysis/**'
+      - 'build/**'
+      - 'make-test/**'
+      - 'make-docs/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  check-ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, go, nodejs, terraform, ansible, kubernetes]
+    uses: ./.github/workflows/ci.yml
+    with:
+      language: ${{ matrix.language }}
+      working-directory: test/fixtures/${{ matrix.language }}
+      dockerfile-path: test/fixtures/${{ matrix.language }}/Dockerfile
+      run-docker-build: ${{ matrix.language == 'python' }}
+      run-tests: ${{ matrix.language != 'terraform' && matrix.language != 'kubernetes' }}
+      skip-hadolint: ${{ matrix.language != 'python' }}
+    secrets: inherit

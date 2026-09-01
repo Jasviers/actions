@@ -4,20 +4,24 @@ author: 'jasviers'
 
 inputs:
   language:
-    description: 'Programming language (python, go, nodejs, terraform, none)'
+    description: 'Programming language (python, go, nodejs, terraform, ansible, kubernetes, none)'
     required: true
+  working-directory:
+    description: 'Directory containing the project source (relative to the checkout root)'
+    required: false
+    default: '.'
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.13'
+    default: '3.x'
   go-version:
     description: 'Go version to use'
     required: false
-    default: '1.21'
+    default: 'stable'
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: '20'
+    default: 'lts/*'
   terraform-version:
     description: 'Terraform version to use'
     required: false
@@ -32,6 +36,14 @@ inputs:
     default: 'false'
   skip-markdown-checks:
     description: 'Skip Markdown linting and formatting checks'
+    required: false
+    default: 'false'
+  skip-shellcheck:
+    description: 'Skip shellcheck on shell scripts'
+    required: false
+    default: 'false'
+  skip-yamllint:
+    description: 'Skip yamllint on YAML files (style/syntax only — no Kubernetes schema/best-practice checks)'
     required: false
     default: 'false'
   dockerfile-path:
@@ -52,46 +64,51 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     # Python Setup and Linting
     - name: Set up Python
       if: inputs.language == 'python'
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Install ruff (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: pip install ruff
 
     - name: Run ruff lint (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: ruff check
 
     - name: Run ruff format check (Python)
       if: inputs.language == 'python'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: ruff format --check
 
     # Go Setup and Linting
     - name: Set up Go
       if: inputs.language == 'go'
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v7
       with:
         go-version: ${{ inputs.go-version }}
 
     - name: Run golangci-lint (Go)
       if: inputs.language == 'go'
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v9
       with:
         version: latest
+        working-directory: ${{ inputs.working-directory }}
 
     - name: Run go fmt check (Go)
       if: inputs.language == 'go'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
           echo "Code is not formatted. Run 'go fmt ./...'"
@@ -102,24 +119,28 @@ runs:
     - name: Run go vet (Go)
       if: inputs.language == 'go'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: go vet ./...
 
     # Node.js Setup and Linting
     - name: Set up Node.js
       if: inputs.language == 'nodejs'
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
     - name: Install dependencies (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: npm ci
 
     - name: Run ESLint (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f eslint.config.js ]; then
           npx eslint .
@@ -130,6 +151,7 @@ runs:
     - name: Run Prettier check (Node.js)
       if: inputs.language == 'nodejs'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
           npx prettier --check .
@@ -140,39 +162,80 @@ runs:
     # Terraform Setup and Linting
     - name: Set up Terraform
       if: inputs.language == 'terraform'
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v4
       with:
         terraform_version: ${{ inputs.terraform-version }}
 
     - name: Run terraform fmt check (Terraform)
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: terraform fmt -check -recursive
 
     - name: Run terraform validate (Terraform)
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         find . -name "*.tf" -type f -execdir terraform init -backend=false \;
         find . -name "*.tf" -type f -execdir terraform validate \;
 
     - name: Run tflint (Terraform)
       if: inputs.language == 'terraform'
-      uses: terraform-linters/setup-tflint@v4
+      uses: terraform-linters/setup-tflint@v6
       with:
         tflint_version: latest
 
     - name: Run TFLint
       if: inputs.language == 'terraform'
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: tflint --init && tflint
 
-    # Markdown checks
+    # Ansible Setup and Linting
+    - name: Set up Python (Ansible)
+      if: inputs.language == 'ansible'
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install ansible-lint and yamllint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pip install ansible-lint yamllint
+
+    - name: Run yamllint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: yamllint .
+
+    - name: Run ansible-lint (Ansible)
+      if: inputs.language == 'ansible'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ansible-lint
+
+    # Kubernetes Setup and Linting
+    - name: Run kubeconform (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
+      with:
+        args: -summary -strict -ignore-missing-schemas ${{ inputs.working-directory }}
+
+    - name: Run kube-linter (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      uses: stackrox/kube-linter-action@v1
+      with:
+        directory: ${{ inputs.working-directory }}
+        version: '0.8.3'
+
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
-        node-version: '24'
+        node-version: 'lts/*'
 
     - name: Install markdownlint-cli
       if: inputs.skip-markdown-checks == 'false'
@@ -185,10 +248,23 @@ runs:
       run: |
         markdownlint "**/*.md" --ignore "CHANGELOG.md" --config .markdownlint.yml
 
+    - name: Run yamllint
+      if: inputs.skip-yamllint == 'false'
+      shell: bash
+      run: |
+        pip install yamllint
+        yamllint .
+
+    - name: Run shellcheck
+      if: inputs.skip-shellcheck == 'false'
+      uses: ludeeus/action-shellcheck@2.0.0
+      with:
+        severity: warning
+
     - name: Run hadolint (Dockerfile linting)
       id: hadolint
       if: inputs.skip-hadolint == 'false'
-      uses: hadolint/hadolint-action@master
+      uses: hadolint/hadolint-action@v3.5.0
       with:
         dockerfile: ${{ inputs.dockerfile-path }}
         format: sarif
@@ -218,7 +294,7 @@ runs:
 
     - name: Upload hadolint SARIF output
       if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: hadolint-sarif
         path: hadolint-results.sarif

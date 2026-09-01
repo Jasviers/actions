@@ -41,6 +41,11 @@ on:
         required: false
         type: string
         default: ""
+      generate-sbom:
+        description: "Generate a Software Bill of Materials for the built image (only applies when run-docker-build is true)"
+        required: false
+        type: boolean
+        default: false
       dockerfile-path:
         required: false
         type: string
@@ -140,6 +145,7 @@ jobs:
           working-directory: ${{ inputs.working-directory }}
           registry: ${{ inputs.docker-registry }}
           image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
+          generate-sbom: ${{ inputs.generate-sbom }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Compliance

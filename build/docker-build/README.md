@@ -21,6 +21,7 @@ Builds (and optionally pushes) a Docker image with Buildx, using GitHub Actions 
 | `image-name` | <p>Image name (defaults to repository name)</p> | `false` | `${{ github.repository }}` |
 | `github-token` | <p>GitHub token for registry authentication</p> | `true` | `""` |
 | `push` | <p>Push image to registry</p> | `false` | `true` |
+| `generate-sbom` | <p>Generate a Software Bill of Materials (SPDX JSON) for the built image and upload it as an artifact</p> | `false` | `false` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->

@@ -21,6 +21,10 @@ inputs:
     description: 'Push image to registry'
     required: false
     default: 'true'
+  generate-sbom:
+    description: 'Generate a Software Bill of Materials (SPDX JSON) for the built image and upload it as an artifact'
+    required: false
+    default: 'false'
 
 outputs:
   image-tag:
@@ -60,3 +64,11 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Generate SBOM
+      if: inputs.generate-sbom == 'true' && inputs.push == 'true'
+      uses: anchore/sbom-action@v0.24.2
+      with:
+        image: ${{ steps.meta.outputs.tags }}
+        format: spdx-json
+        artifact-name: docker-sbom

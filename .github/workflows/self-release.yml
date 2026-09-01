@@ -5,6 +5,17 @@ on:
   push:
     branches: [main]
 
+# Must grant at least what the called release.yml requests, otherwise the
+# reusable-workflow call fails at startup ("requesting 'contents: write', but is
+# only allowed 'contents: read'").
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+  pages: write
+  id-token: write
+  security-events: write
+
 jobs:
   release:
     uses: ./.github/workflows/release.yml

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/Jasviers/actions/compare/v2.0.1...v2.1.0) (2026-09-02)
+
+
+### ✨ Features
+
+* **test:** move out of workflows/test to force to execute ([97430fc](https://github.com/Jasviers/actions/commit/97430fc69a426c6e125a67863e2fe78d46ff4736))
+
 ## [2.0.1](https://github.com/Jasviers/actions/compare/v2.0.0...v2.0.1) (2026-09-02)
 
 

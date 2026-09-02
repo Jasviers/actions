@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
 
+# Serialise release runs on main so two rapid pushes can't race release-please
+# or the floating-tag force-push below.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 # Must grant at least what the called release.yml requests, otherwise the
 # reusable-workflow call fails at startup ("requesting 'contents: write', but is
 # only allowed 'contents: read'").
@@ -14,7 +20,6 @@ permissions:
   packages: write
   pages: write
   id-token: write
-  security-events: write
 
 jobs:
   release:
@@ -26,7 +31,8 @@ jobs:
     secrets: inherit
 
   float-tag:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     needs: release
     if: needs.release.outputs.release-created == 'true'
     permissions:
@@ -35,11 +41,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          ref: ${{ needs.release.outputs.tag-name }}
           fetch-depth: 0
 
       - name: Update floating major tag
+        env:
+          TAG: ${{ needs.release.outputs.tag-name }}
         run: |
-          TAG="${{ needs.release.outputs.tag-name }}"
+          set -euo pipefail
           MAJOR="${TAG%%.*}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

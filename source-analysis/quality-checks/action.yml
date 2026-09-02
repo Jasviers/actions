@@ -61,6 +61,8 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     # Python Setup and Linting
     - name: Set up Python

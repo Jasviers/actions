@@ -113,13 +113,16 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     outputs:
       image-tag: ${{ steps.docker_build.outputs.image-tag }}
       image-digest: ${{ steps.docker_build.outputs.image-digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Check Quality
         uses: Jasviers/actions/source-analysis/quality-checks@v2

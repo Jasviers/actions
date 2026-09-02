@@ -20,6 +20,8 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - name: Run Trivy filesystem scanner
       uses: aquasecurity/trivy-action@v0.36.0

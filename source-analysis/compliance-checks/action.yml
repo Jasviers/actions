@@ -37,6 +37,8 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - name: Map language to CodeQL language
       id: map-language

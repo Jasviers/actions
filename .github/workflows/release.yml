@@ -61,7 +61,8 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
@@ -93,7 +94,8 @@ jobs:
   docs:
     needs: release
     if: needs.release.outputs.release-created == 'true' && inputs.run-docs && inputs.language == 'python'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     environment: github-pages
     concurrency:
       group: pages

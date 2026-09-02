@@ -17,7 +17,6 @@ Runs `pytest` with coverage (installing dependencies from `requirements.txt`/`se
 | `python-version` | <p>Python version to use</p> | `false` | `3.x` |
 | `test-directory` | <p>Directory containing tests</p> | `false` | `test` |
 | `pytest-args` | <p>Additional pytest arguments</p> | `false` | `-v --cov --cov-report=xml --cov-report=term` |
-| `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->
@@ -25,6 +24,6 @@ Runs `pytest` with coverage (installing dependencies from `requirements.txt`/`se
 
 | name | description |
 | --- | --- |
-| `coverage-file` | <p>Path to coverage report</p> |
-| `test-results` | <p>Test execution results</p> |
+| `coverage-file` | <p>Path to the coverage report (relative to the checkout root)</p> |
+| `test-results` | <p>Test step outcome (success/failure); readable by callers that set continue-on-error on this action</p> |
 <!-- action-docs-outputs source="action.yml" -->

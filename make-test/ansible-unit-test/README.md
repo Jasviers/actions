@@ -26,5 +26,5 @@ Installs `ansible-core` (plus Galaxy requirements from `requirements.yml` if pre
 
 | name | description |
 | --- | --- |
-| `test-results` | <p>Test execution results</p> |
+| `test-results` | <p>Syntax-check step outcome (success/failure); readable by callers that set continue-on-error on this action</p> |
 <!-- action-docs-outputs source="action.yml" -->

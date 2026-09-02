@@ -1,9 +1,5 @@
 # zizmor configuration — https://docs.zizmor.sh/configuration/
 rules:
-  # Third-party actions are tag-pinned today. renovate.json enables
-  # helpers:pinGitHubActionDigests + pinDigests, which hash-pins them over time.
-  # Until Renovate is installed, keep these as warnings (not errors) so they stay
-  # visible in code scanning without gating PRs.
   unpinned-uses:
     remap:
       severity: medium

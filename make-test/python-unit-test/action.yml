@@ -19,17 +19,13 @@ inputs:
     description: 'Additional pytest arguments'
     required: false
     default: '-v --cov --cov-report=xml --cov-report=term'
-  github-token:
-    description: 'GitHub token for uploading SARIF results'
-    required: false
-    default: ''
 
 outputs:
   coverage-file:
-    description: 'Path to coverage report'
-    value: 'coverage.xml'
+    description: 'Path to the coverage report (relative to the checkout root)'
+    value: ${{ inputs.working-directory }}/coverage.xml
   test-results:
-    description: 'Test execution results'
+    description: 'Test step outcome (success/failure); readable by callers that set continue-on-error on this action'
     value: ${{ steps.run-tests.outcome }}
 
 runs:
@@ -58,6 +54,7 @@ runs:
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      continue-on-error: true
       env:
         TEST_DIRECTORY: ${{ inputs.test-directory }}
         PYTEST_ARGS: ${{ inputs.pytest-args }}
@@ -73,3 +70,10 @@ runs:
           ${{ inputs.working-directory }}/coverage.xml
           ${{ inputs.working-directory }}/htmlcov/
         retention-days: 30
+
+    - name: Fail if tests failed
+      if: steps.run-tests.outcome != 'success'
+      shell: bash
+      run: |
+        echo "::error::pytest reported failures"
+        exit 1

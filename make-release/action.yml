@@ -30,12 +30,6 @@ runs:
       with:
         fetch-depth: 0
 
-    - name: Check Quality
-      uses: Jasviers/actions/source-analysis/quality-checks@v1
-      with:
-        language: none
-        skip-hadolint: 'true'
-
     - name: Verify release-please config exists
       shell: bash
       env:

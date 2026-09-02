@@ -8,7 +8,7 @@ This repository contains a collection of GitHub Actions designed to streamline a
 
 ### [Make-release](make-release/README.md)
 
-This action ensures the quality of the source code before generating a changelog and creating a release. It leverages quality checks to maintain high standards and uses `release-please-action` to automate the release process.
+Generates a changelog and creates a release from Conventional Commits using `release-please-action`.
 
 ### Source-Analysis
 

@@ -1,6 +1,6 @@
 # Quality Checks
 
-The multi-language linting hub: dispatches on `language` to run `ruff` (python), `golangci-lint`/`gofmt`/`go vet` (go), `eslint`/`prettier` (nodejs, only if a config file is present), `terraform fmt`/`validate`/`tflint` (terraform), or `ansible-lint`/`yamllint` (ansible) — plus universal checks that always run regardless of language: Markdown linting, `shellcheck`, and `hadolint` (Dockerfile linting, skippable). Normally invoked from [`ci.yml`](../../.github/workflows/ci.yml) and [`make-release`](../../make-release/).
+The multi-language linting hub: dispatches on `language` to run `ruff` (python), `golangci-lint`/`gofmt`/`go vet` (go), `eslint`/`prettier` (nodejs, only if a config file is present), `terraform fmt`/`validate`/`tflint` (terraform), or `ansible-lint`/`yamllint` (ansible) — plus universal checks that always run regardless of language: Markdown linting, `yamllint`, `shellcheck`, and `hadolint` (Dockerfile linting, skippable). Normally invoked from [`ci.yml`](../../.github/workflows/ci.yml).
 
 ## Usage
 
@@ -22,7 +22,6 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 | `go-version` | <p>Go version to use</p> | `false` | `stable` |
 | `node-version` | <p>Node.js version to use</p> | `false` | `lts/*` |
 | `terraform-version` | <p>Terraform version to use</p> | `false` | `latest` |
-| `skip-spellcheck` | <p>Skip spellcheck step</p> | `false` | `false` |
 | `skip-hadolint` | <p>Skip Dockerfile linting</p> | `false` | `false` |
 | `skip-markdown-checks` | <p>Skip Markdown linting and formatting checks</p> | `false` | `false` |
 | `skip-shellcheck` | <p>Skip shellcheck on shell scripts</p> | `false` | `false` |
@@ -36,5 +35,5 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 
 | name | description |
 | --- | --- |
-| `hadolint-sarif` | <p>Path to hadolint SARIF results</p> |
+| `hadolint-sarif` | <p>Path to hadolint SARIF results (empty when skipped or no Dockerfile found)</p> |
 <!-- action-docs-outputs source="action.yml" -->

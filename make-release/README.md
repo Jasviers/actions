@@ -1,6 +1,6 @@
 # Changelog Generator (`make-release`)
 
-Runs quality checks, then generates a changelog and release using [release-please](https://github.com/googleapis/release-please), based on Conventional Commits. Normally you don't call this directly — the [`release.yml`](../.github/workflows/release.yml) reusable workflow wraps it and adds the Docker build/docs steps and release gating on top.
+Generates a changelog and release using [release-please](https://github.com/googleapis/release-please), based on Conventional Commits. Normally you don't call this directly — the [`release.yml`](../.github/workflows/release.yml) reusable workflow wraps it and adds the Docker build/docs steps and release gating on top.
 
 **Prerequisite**: every consumer needs its own `release-please-config.json` and `.release-please-manifest.json` at its repo root (or point `config-file`/`manifest-file` at a custom path) — this action checks they exist and fails fast with a clear error if not.
 

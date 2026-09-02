@@ -22,7 +22,7 @@ Runs [CodeQL](https://codeql.github.com/) analysis for `python`, `go`, or `nodej
 | `working-directory` | <p>Directory containing the project source (relative to the checkout root)</p> | `false` | `.` |
 | `python-version` | <p>Python version to use</p> | `false` | `3.x` |
 | `go-version` | <p>Go version to use</p> | `false` | `stable` |
-| `codeql-queries` | <p>CodeQL query suite to use (security-and-quality, security-extended, or security-only)</p> | `false` | `security-and-quality` |
+| `codeql-queries` | <p>CodeQL query suite to use (default, security-extended, or security-and-quality)</p> | `false` | `security-and-quality` |
 | `upload-sarif` | <p>Upload SARIF results to GitHub Security</p> | `false` | `true` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->

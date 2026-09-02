@@ -18,7 +18,7 @@ inputs:
 
 outputs:
   test-results:
-    description: 'Test execution results'
+    description: 'Test step outcome (success/failure); readable by callers that set continue-on-error on this action'
     value: ${{ steps.run-tests.outcome }}
 
 runs:
@@ -40,6 +40,14 @@ runs:
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      continue-on-error: true
       env:
         TEST_SCRIPT: ${{ inputs.test-script }}
       run: npm run "$TEST_SCRIPT"
+
+    - name: Fail if tests failed
+      if: steps.run-tests.outcome != 'success'
+      shell: bash
+      run: |
+        echo "::error::npm test script reported failures"
+        exit 1

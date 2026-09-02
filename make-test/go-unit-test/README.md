@@ -25,6 +25,6 @@ Runs `go test ./... -coverprofile=coverage.out`, with an optional minimum-covera
 
 | name | description |
 | --- | --- |
-| `coverage-file` | <p>Path to coverage report</p> |
-| `test-results` | <p>Test execution results</p> |
+| `coverage-file` | <p>Path to the coverage report (relative to the checkout root)</p> |
+| `test-results` | <p>Test step outcome (success/failure); readable by callers that set continue-on-error on this action</p> |
 <!-- action-docs-outputs source="action.yml" -->

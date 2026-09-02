@@ -23,5 +23,5 @@ Installs dependencies with `npm ci` and runs an npm script (`test` by default). 
 
 | name | description |
 | --- | --- |
-| `test-results` | <p>Test execution results</p> |
+| `test-results` | <p>Test step outcome (success/failure); readable by callers that set continue-on-error on this action</p> |
 <!-- action-docs-outputs source="action.yml" -->

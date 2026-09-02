@@ -26,10 +26,6 @@ inputs:
     description: 'Terraform version to use'
     required: false
     default: 'latest'
-  skip-spellcheck:
-    description: 'Skip spellcheck step'
-    required: false
-    default: 'false'
   skip-hadolint:
     description: 'Skip Dockerfile linting'
     required: false
@@ -57,8 +53,8 @@ inputs:
 
 outputs:
   hadolint-sarif:
-    description: 'Path to hadolint SARIF results'
-    value: ${{ steps.hadolint.outputs.sarif-file }}
+    description: 'Path to hadolint SARIF results (empty when skipped or no Dockerfile found)'
+    value: ${{ steps.check-hadolint.outputs.sarif-file }}
 
 runs:
   using: 'composite'
@@ -203,7 +199,7 @@ runs:
       if: inputs.language == 'ansible'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: pip install ansible-lint yamllint
+      run: pip install --quiet --disable-pip-version-check ansible-lint yamllint
 
     - name: Run yamllint (Ansible)
       if: inputs.language == 'ansible'
@@ -252,7 +248,7 @@ runs:
       if: inputs.skip-yamllint == 'false'
       shell: bash
       run: |
-        pip install yamllint
+        command -v yamllint >/dev/null 2>&1 || pip install --quiet --disable-pip-version-check yamllint
         yamllint .
 
     - name: Run shellcheck

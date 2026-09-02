@@ -20,7 +20,7 @@ inputs:
     required: false
     default: 'stable'
   codeql-queries:
-    description: 'CodeQL query suite to use (security-and-quality, security-extended, or security-only)'
+    description: 'CodeQL query suite to use (default, security-extended, or security-and-quality)'
     required: false
     default: 'security-and-quality'
   upload-sarif:
@@ -117,10 +117,9 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Upload SARIF as artifact
+      if: steps.analyze.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:
         name: codeql-sarif-results
         path: codeql-results.sarif
         retention-days: 30
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}

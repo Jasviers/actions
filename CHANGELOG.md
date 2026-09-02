@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Jasviers/actions/compare/v2.0.0...v2.0.1) (2026-09-02)
+
+
+### 🐛 Fixes
+
+* **ci:** point internal action refs at [@v2](https://github.com/v2) ([2b79c60](https://github.com/Jasviers/actions/commit/2b79c6042710f10699bcae4c38defd3a51be85f0))
+
 ## [2.0.0](https://github.com/Jasviers/actions/compare/v1.0.0...v2.0.0) (2026-09-01)
 
 

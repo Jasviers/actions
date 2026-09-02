@@ -52,18 +52,20 @@ on:
       image-tag:
         description: 'Full image tag with registry (empty unless a release was created and run-docker-build was true)'
         value: ${{ jobs.release.outputs.image-tag }}
+      page-url:
+        description: 'URL of the deployed documentation site (empty unless a release was created, run-docs was true and language is python)'
+        value: ${{ jobs.docs.outputs.page-url }}
 
 permissions:
-  contents: write
-  pull-requests: write
-  packages: write
-  pages: write
-  id-token: write
-  security-events: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
     outputs:
       release-created: ${{ steps.make_release.outputs.release-created }}
       tag-name: ${{ steps.make_release.outputs.tag-name }}
@@ -88,9 +90,25 @@ jobs:
           generate-sbom: ${{ inputs.generate-sbom }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  docs:
+    needs: release
+    if: needs.release.outputs.release-created == 'true' && inputs.run-docs && inputs.language == 'python'
+    runs-on: ubuntu-latest
+    environment: github-pages
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    outputs:
+      page-url: ${{ steps.docs.outputs.page-url }}
+    steps:
       - name: Generate Documentation
-        if: steps.make_release.outputs.release-created == 'true' && inputs.run-docs && inputs.language == 'python'
+        id: docs
         uses: Jasviers/actions/make-docs/python-docs@v2
         with:
           working-directory: ${{ inputs.working-directory }}
+          version: ${{ needs.release.outputs.tag-name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

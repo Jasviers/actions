@@ -24,13 +24,22 @@ inputs:
     required: false
     default: ${{ github.repository_owner }}
   version:
-    description: 'Project version'
+    description: 'Project version (a leading "v" is stripped)'
     required: false
     default: '1.0.0'
+  strict-docs:
+    description: "Treat Sphinx build warnings as errors (-W). Set to 'false' for a lenient build."
+    required: false
+    default: 'true'
   deploy-to-pages:
     description: 'Deploy documentation to GitHub Pages'
     required: false
     default: 'true'
+
+outputs:
+  page-url:
+    description: 'URL of the deployed documentation site (empty when deploy-to-pages is false)'
+    value: ${{ steps.deployment.outputs.page_url }}
 
 runs:
   using: 'composite'
@@ -72,9 +81,11 @@ runs:
     - name: Generate Documentation
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        STRICT_DOCS: ${{ inputs.strict-docs }}
       run: |
-        chmod +x ${{ github.action_path }}/generate-docs.sh
-        ${{ github.action_path }}/generate-docs.sh
+        chmod +x "${{ github.action_path }}/generate-docs.sh"
+        "${{ github.action_path }}/generate-docs.sh"
 
     - name: Setup Pages
       if: ${{ inputs.deploy-to-pages == 'true' }}
@@ -96,5 +107,7 @@ runs:
     - name: Output Documentation URL
       shell: bash
       if: ${{ inputs.deploy-to-pages == 'true' }}
+      env:
+        PAGE_URL: ${{ steps.deployment.outputs.page_url }}
       run: |
-        echo "Documentation deployed to: ${{ steps.deployment.outputs.page_url }}"
+        echo "Documentation deployed to: $PAGE_URL"

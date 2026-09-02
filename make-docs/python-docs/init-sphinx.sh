@@ -1,9 +1,11 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 PROJECT_NAME="${1:-MyProject}"
 AUTHOR="${2:-Author}"
 VERSION="${3:-1.0.0}"
+VERSION="${VERSION#v}"
+YEAR="$(date +%Y)"
 
 echo "🔧 Initializing Sphinx configuration..."
 
@@ -19,7 +21,7 @@ fi
 # Find Python source directory
 SRC_DIR=""
 for dir in src . lib app; do
-    if [ -d "$dir" ] && find "$dir" -name "*.py" -type f | head -1 | grep -q .; then
+    if [ -d "$dir" ] && [ -n "$(find "$dir" -name '*.py' -type f -print -quit)" ]; then
         SRC_DIR="$dir"
         break
     fi
@@ -42,7 +44,7 @@ sys.path.insert(0, os.path.abspath('../${SRC_DIR}'))
 
 # -- Project information -----------------------------------------------------
 project = '${PROJECT_NAME}'
-copyright = '2025, ${AUTHOR}'
+copyright = '${YEAR}, ${AUTHOR}'
 author = '${AUTHOR}'
 version = '${VERSION}'
 release = '${VERSION}'
@@ -84,10 +86,10 @@ intersphinx_mapping = {
 
 EOF
 
-# Create index.rst
+TITLE="Welcome to ${PROJECT_NAME}'s documentation!"
 cat > docs/index.rst << EOF
-Welcome to ${PROJECT_NAME}'s documentation!
-$( printf '=%.0s' $(seq 1 $((${#PROJECT_NAME} + 26))) )
+${TITLE}
+$(printf '=%.0s' $(seq 1 ${#TITLE}))
 
 .. toctree::
    :maxdepth: 2
@@ -103,10 +105,7 @@ Indices and tables
 * :ref:\`search\`
 EOF
 
-# Create _static and _templates directories
 mkdir -p docs/_static docs/_templates
-
-# Create .nojekyll for GitHub Pages
 touch docs/_static/.gitkeep
 touch docs/_templates/.gitkeep
 

@@ -1,12 +1,12 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 echo "📚 Generating Python documentation..."
 
 # Find Python source directory
 SRC_DIR=""
 for dir in src . lib app; do
-    if [ -d "$dir" ] && find "$dir" -name "*.py" -type f | head -1 | grep -q .; then
+    if [ -d "$dir" ] && [ -n "$(find "$dir" -name '*.py' -type f -print -quit)" ]; then
         SRC_DIR="$dir"
         break
     fi
@@ -27,10 +27,12 @@ fi
 
 echo "🔨 Building HTML documentation..."
 
-# Build the documentation
-sphinx-build -b html docs/ docs/_build/html -W --keep-going || sphinx-build -b html docs/ docs/_build/html
+sphinx_opts=(--keep-going)
+if [ "${STRICT_DOCS:-true}" = "true" ]; then
+    sphinx_opts=(-W "${sphinx_opts[@]}")
+fi
+sphinx-build -b html docs/ docs/_build/html "${sphinx_opts[@]}"
 
-# Create .nojekyll file for GitHub Pages
 touch docs/_build/html/.nojekyll
 
 echo "📂 Generated documentation files:"

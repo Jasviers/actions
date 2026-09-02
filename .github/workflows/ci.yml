@@ -122,7 +122,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Check Quality
-        uses: Jasviers/actions/source-analysis/quality-checks@v1
+        uses: Jasviers/actions/source-analysis/quality-checks@v2
         with:
           language: ${{ inputs.language }}
           working-directory: ${{ inputs.working-directory }}
@@ -140,7 +140,7 @@ jobs:
       - name: Build Docker Image
         id: docker_build
         if: inputs.run-docker-build
-        uses: Jasviers/actions/build/docker-build@v1
+        uses: Jasviers/actions/build/docker-build@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           registry: ${{ inputs.docker-registry }}
@@ -150,7 +150,7 @@ jobs:
 
       - name: Check Compliance
         if: inputs.run-compliance-checks && inputs.language != 'terraform' && inputs.language != 'ansible' && inputs.language != 'kubernetes' && inputs.language != 'none'
-        uses: Jasviers/actions/source-analysis/compliance-checks@v1
+        uses: Jasviers/actions/source-analysis/compliance-checks@v2
         with:
           language: ${{ inputs.language }}
           working-directory: ${{ inputs.working-directory }}
@@ -161,7 +161,7 @@ jobs:
 
       - name: Check Security
         if: inputs.run-security-checks
-        uses: Jasviers/actions/source-analysis/security-checks@v1
+        uses: Jasviers/actions/source-analysis/security-checks@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -169,7 +169,7 @@ jobs:
 
       - name: Run Unit Tests (Python)
         if: inputs.run-tests && inputs.language == 'python'
-        uses: Jasviers/actions/make-test/python-unit-test@v1
+        uses: Jasviers/actions/make-test/python-unit-test@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           python-version: ${{ inputs.python-version }}
@@ -178,21 +178,21 @@ jobs:
 
       - name: Run Unit Tests (Go)
         if: inputs.run-tests && inputs.language == 'go'
-        uses: Jasviers/actions/make-test/go-unit-test@v1
+        uses: Jasviers/actions/make-test/go-unit-test@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           go-version: ${{ inputs.go-version }}
 
       - name: Run Unit Tests (Node.js)
         if: inputs.run-tests && inputs.language == 'nodejs'
-        uses: Jasviers/actions/make-test/nodejs-unit-test@v1
+        uses: Jasviers/actions/make-test/nodejs-unit-test@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           node-version: ${{ inputs.node-version }}
 
       - name: Run Unit Tests (Ansible)
         if: inputs.run-tests && inputs.language == 'ansible'
-        uses: Jasviers/actions/make-test/ansible-unit-test@v1
+        uses: Jasviers/actions/make-test/ansible-unit-test@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           python-version: ${{ inputs.python-version }}

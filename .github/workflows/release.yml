@@ -71,7 +71,7 @@ jobs:
     steps:
       - name: Make Release
         id: make_release
-        uses: Jasviers/actions/make-release@main
+        uses: Jasviers/actions/make-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: ${{ inputs.config-file }}
@@ -80,7 +80,7 @@ jobs:
       - name: Build Docker Image
         id: docker_build
         if: steps.make_release.outputs.release-created == 'true' && inputs.run-docker-build
-        uses: Jasviers/actions/build/docker-build@main
+        uses: Jasviers/actions/build/docker-build@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           registry: ${{ inputs.docker-registry }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Generate Documentation
         if: steps.make_release.outputs.release-created == 'true' && inputs.run-docs && inputs.language == 'python'
-        uses: Jasviers/actions/make-docs/python-docs@main
+        uses: Jasviers/actions/make-docs/python-docs@v2
         with:
           working-directory: ${{ inputs.working-directory }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -28,9 +28,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Check Quality
-        uses: Jasviers/actions/source-analysis/quality-checks@v1
+        uses: Jasviers/actions/source-analysis/quality-checks@v2
         with:
           language: python
 
       - name: Generate Documentation
-        uses: Jasviers/actions/make-docs/python-docs@v1
+        uses: Jasviers/actions/make-docs/python-docs@v2

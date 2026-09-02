@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'make-release/**'
+      - '.github/workflows/test-check-make-release.yml'
 
 jobs:
   test-make-release:

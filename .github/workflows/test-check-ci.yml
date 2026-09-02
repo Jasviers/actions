@@ -4,11 +4,17 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'source-analysis/**'
-      - 'build/**'
-      - 'make-test/**'
-      - 'make-docs/**'
-      - '.github/workflows/ci.yml'
+      - "source-analysis/**"
+      - "build/**"
+      - "make-test/**"
+      - "make-docs/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/test-check-ci.yml"
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
 
 jobs:
   check-ci:

@@ -7,7 +7,7 @@ When `deploy-to-pages` is `true` (the default) the calling job must set `environ
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-docs/python-docs@v1
+- uses: Jasviers/actions/make-docs/python-docs@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```

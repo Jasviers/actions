@@ -53,6 +53,24 @@ jobs:
         uses: zizmorcore/zizmor-action@v0.6.2
         continue-on-error: true
 
+  markdownlint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Run markdownlint
+        continue-on-error: true
+        run: |
+          # renovate: datasource=npm depName=markdownlint-cli
+          npm install -g markdownlint-cli@0.49.1
+          markdownlint "**/*.md" --ignore "CHANGELOG.md" --config .markdownlint.yml
+
   action-docs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10

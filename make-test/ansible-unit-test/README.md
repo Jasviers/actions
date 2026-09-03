@@ -5,7 +5,7 @@ Installs `ansible-core` (plus Galaxy requirements from `requirements.yml` if pre
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-test/ansible-unit-test@v1
+- uses: Jasviers/actions/make-test/ansible-unit-test@v2
   with:
     playbook: site.yml
 ```

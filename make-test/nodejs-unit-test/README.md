@@ -5,7 +5,7 @@ Installs dependencies with `npm ci` and runs an npm script (`test` by default). 
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-test/nodejs-unit-test@v1
+- uses: Jasviers/actions/make-test/nodejs-unit-test@v2
 ```
 
 <!-- action-docs-inputs source="action.yml" -->

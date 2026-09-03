@@ -1,5 +1,9 @@
 name: 'Docker build action'
 description: 'Create a Docker image from a Dockerfile'
+author: 'jasviers'
+branding:
+  icon: 'package'
+  color: 'blue'
 
 inputs:
   working-directory:

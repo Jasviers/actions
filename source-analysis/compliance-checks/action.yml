@@ -1,6 +1,9 @@
 name: 'Compliance Checks'
 description: 'Run CodeQL compliance and security analysis'
 author: 'jasviers'
+branding:
+  icon: 'shield'
+  color: 'blue'
 
 inputs:
   language:

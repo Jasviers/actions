@@ -1,6 +1,9 @@
 name: 'Python Unit Tests'
 description: 'Run Python unit tests using pytest'
 author: 'jasviers'
+branding:
+  icon: 'check-square'
+  color: 'green'
 
 inputs:
   working-directory:
@@ -14,7 +17,7 @@ inputs:
   test-directory:
     description: 'Directory containing tests'
     required: false
-    default: 'test'
+    default: 'tests'
   pytest-args:
     description: 'Additional pytest arguments'
     required: false

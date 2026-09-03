@@ -12,9 +12,9 @@
 
 ### 🐛 Fixes
 
-* **ci:** point internal action refs at [@v2](https://github.com/v2) ([2b79c60](https://github.com/Jasviers/actions/commit/2b79c6042710f10699bcae4c38defd3a51be85f0))
+* **ci:** point internal action refs at `@v2` ([2b79c60](https://github.com/Jasviers/actions/commit/2b79c6042710f10699bcae4c38defd3a51be85f0))
 
-## [2.0.0](https://github.com/Jasviers/actions/compare/v1.0.0...v2.0.0) (2026-09-01)
+## [2.0.0](https://github.com/Jasviers/actions/compare/v1...v2.0.0) (2026-09-01)
 
 
 ### ✨ Features
@@ -92,11 +92,6 @@
 * try to fix error adding checkout ([c8ed4f8](https://github.com/Jasviers/actions/commit/c8ed4f839133acc18e35d46ab14700bd19c81143))
 * try to fix error adding checkout ([2bc1346](https://github.com/Jasviers/actions/commit/2bc1346591ea6d5b82f2aef7dac01e78ba6b5a8d))
 * try to repair pipeline changing project key name ([0950482](https://github.com/Jasviers/actions/commit/09504829d5b3dc10847b82da12f1a26d4f7e5778))
-
-
-### 🧹 Chores
-
-* release 2.0.0 ([ef1239f](https://github.com/Jasviers/actions/commit/ef1239f9970f0fe90fab1445fb712dfa344847fd))
 
 
 ### 📚 Documentation

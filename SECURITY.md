@@ -8,11 +8,11 @@ Please do not open a public issue for security reports.
 
 ## Scope
 
-This repository publishes reusable GitHub Actions and workflows (`uses: Jasviers/actions/...@v1`). A security report is in scope if it concerns:
+This repository publishes reusable GitHub Actions and workflows (`uses: Jasviers/actions/...@v2`). A security report is in scope if it concerns:
 
 - A composite action or reusable workflow behaving in an unsafe way for its consumers (e.g. leaking secrets, running untrusted input unsanitized, excessive permissions).
 - A third-party action dependency pinned in this repository that is known to be compromised.
 
 ## Supported Versions
 
-Only the latest `v1` release is supported. There is no long-term support for older commits.
+Only the current major line (`v2`) is supported. `v1` is frozen and receives no updates; there is no long-term support for older commits.

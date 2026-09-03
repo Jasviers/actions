@@ -5,7 +5,7 @@ Scans the source tree with [Trivy](https://trivy.dev/) in filesystem mode (alway
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/source-analysis/security-checks@v1
+- uses: Jasviers/actions/source-analysis/security-checks@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     docker-image: ${{ steps.docker_build.outputs.image-tag }}

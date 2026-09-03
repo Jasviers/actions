@@ -7,7 +7,7 @@ Runs [CodeQL](https://codeql.github.com/) analysis for `python`, `go`, or `nodej
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/source-analysis/compliance-checks@v1
+- uses: Jasviers/actions/source-analysis/compliance-checks@v2
   with:
     language: python
     github-token: ${{ secrets.GITHUB_TOKEN }}

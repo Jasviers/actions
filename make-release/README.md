@@ -7,7 +7,7 @@ Generates a changelog and release using [release-please](https://github.com/goog
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-release@v1
+- uses: Jasviers/actions/make-release@v2
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
 ```

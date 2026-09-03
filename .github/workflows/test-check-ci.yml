@@ -32,7 +32,6 @@ permissions:
   security-events: write
 
 jobs:
-  # Smoke test: every non-Docker language pipeline completes against a clean fixture.
   check-ci:
     strategy:
       fail-fast: false
@@ -47,8 +46,6 @@ jobs:
       skip-hadolint: true
     secrets: inherit
 
-  # Python runs on its own so assert-outputs can read its outputs (matrix
-  # reusable-workflow jobs don't expose per-entry outputs).
   check-ci-python:
     uses: ./.github/workflows/ci.yml
     with:
@@ -78,8 +75,6 @@ jobs:
           [ -n "$IMAGE_DIGEST" ] || { echo "::error::ci.yml did not emit image-digest"; exit 1; }
           [ "$(printf '%s' "$IMAGE_TAG" | wc -l)" -eq 0 ] || { echo "::error::image-tag is multi-line"; exit 1; }
 
-  # Negative fixtures: quality-checks (run straight from the PR's code, not @v2)
-  # MUST fail on deliberately bad input, otherwise the language gate is broken.
   reject-bad-fixtures:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -106,10 +101,10 @@ jobs:
         with:
           language: ${{ matrix.language }}
           working-directory: ${{ matrix.dir }}
-          skip-markdown-checks: 'true'
-          skip-yamllint: 'true'
-          skip-shellcheck: 'true'
-          skip-hadolint: 'true'
+          skip-markdown-checks: "true"
+          skip-yamllint: "true"
+          skip-shellcheck: "true"
+          skip-hadolint: "true"
 
       - name: Assert it failed
         env:

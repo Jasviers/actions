@@ -1,6 +1,9 @@
 name: 'Ansible Syntax Check'
 description: 'Validate Ansible playbooks with ansible-playbook --syntax-check'
 author: 'jasviers'
+branding:
+  icon: 'check-square'
+  color: 'green'
 
 inputs:
   working-directory:

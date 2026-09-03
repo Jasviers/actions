@@ -1,6 +1,9 @@
 name: 'Node.js Unit Tests'
 description: 'Run Node.js unit tests using an npm script'
 author: 'jasviers'
+branding:
+  icon: 'check-square'
+  color: 'green'
 
 inputs:
   working-directory:

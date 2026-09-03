@@ -1,5 +1,10 @@
 name: "Changelog Generator"
 description: "Generate a changelog based on commit messages"
+author: 'jasviers'
+branding:
+  icon: 'tag'
+  color: 'orange'
+
 inputs:
   token:
     description: 'GitHub token'

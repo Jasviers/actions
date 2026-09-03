@@ -26,5 +26,5 @@ What you expected to happen instead.
 
 ## Version
 
-- Tag/SHA used: `@v1` / `@<sha>`
+- Tag/SHA used: `@v2` / `@<sha>`
 - Runner: `ubuntu-latest` / other

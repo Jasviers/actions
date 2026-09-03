@@ -5,7 +5,7 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/source-analysis/quality-checks@v1
+- uses: Jasviers/actions/source-analysis/quality-checks@v2
   with:
     language: python
     github-token: ${{ secrets.GITHUB_TOKEN }}

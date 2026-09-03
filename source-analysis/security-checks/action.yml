@@ -1,5 +1,9 @@
 name: Security Checks
 description: Check source code for security vulnerabilities using Trivy
+author: 'jasviers'
+branding:
+  icon: 'shield'
+  color: 'red'
 
 inputs:
   working-directory:

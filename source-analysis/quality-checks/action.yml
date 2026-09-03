@@ -1,6 +1,9 @@
 name: 'Quality Checks'
 description: 'Run code quality checks for multiple programming languages'
 author: 'jasviers'
+branding:
+  icon: 'check-circle'
+  color: 'green'
 
 inputs:
   language:
@@ -59,6 +62,19 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Validate language
+      shell: bash
+      env:
+        LANGUAGE: ${{ inputs.language }}
+      run: |
+        case "$LANGUAGE" in
+          python|go|nodejs|terraform|ansible|kubernetes|none) ;;
+          *)
+            echo "::error::quality-checks: unknown language '$LANGUAGE' (expected one of python, go, nodejs, terraform, ansible, kubernetes, none)"
+            exit 1
+            ;;
+        esac
+
     - name: Checkout code
       uses: actions/checkout@v7
       with:
@@ -255,7 +271,12 @@ runs:
       if: inputs.skip-markdown-checks == 'false'
       shell: bash
       run: |
-        markdownlint "**/*.md" --ignore "CHANGELOG.md" --config .markdownlint.yml
+        if ls .markdownlint.{yml,yaml,json,jsonc} >/dev/null 2>&1; then
+          markdownlint "**/*.md" --ignore "CHANGELOG.md"
+        else
+          echo "No .markdownlint config in the repo — using the bundled default"
+          markdownlint "**/*.md" --ignore "CHANGELOG.md" --config "${{ github.action_path }}/markdownlint.default.yml"
+        fi
 
     - name: Run yamllint
       if: inputs.skip-yamllint == 'false'

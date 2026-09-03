@@ -1,6 +1,9 @@
 name: 'Go Unit Tests'
 description: 'Run Go unit tests using go test'
 author: 'jasviers'
+branding:
+  icon: 'check-square'
+  color: 'green'
 
 inputs:
   working-directory:

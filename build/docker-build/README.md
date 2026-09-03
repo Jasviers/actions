@@ -6,7 +6,7 @@ Builds (and optionally pushes) a Docker image with Buildx, using GitHub Actions 
 
 ```yaml
 - id: docker_build
-  uses: Jasviers/actions/build/docker-build@v1
+  uses: Jasviers/actions/build/docker-build@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```

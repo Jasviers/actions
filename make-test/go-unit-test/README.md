@@ -5,7 +5,7 @@ Runs `go test ./... -coverprofile=coverage.out`, with an optional minimum-covera
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-test/go-unit-test@v1
+- uses: Jasviers/actions/make-test/go-unit-test@v2
   with:
     min-coverage: '80'
 ```

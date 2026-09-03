@@ -71,9 +71,10 @@ on:
         type: string
         default: "latest"
       test-directory:
+        description: "Directory containing Python tests"
         required: false
         type: string
-        default: "test"
+        default: "tests"
       pytest-args:
         required: false
         type: string

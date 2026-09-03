@@ -2,10 +2,12 @@
 
 Runs `pytest` with coverage (installing dependencies from `requirements.txt`/`setup.py`/`pyproject.toml` if present) and uploads the coverage report as an artifact. Normally invoked from [`ci.yml`](../../.github/workflows/ci.yml) for `language: python`.
 
+Tests are collected from `tests/` by default — pass `test-directory: test` (or `.`) for other layouts.
+
 ## Usage
 
 ```yaml
-- uses: Jasviers/actions/make-test/python-unit-test@v1
+- uses: Jasviers/actions/make-test/python-unit-test@v2
 ```
 
 <!-- action-docs-inputs source="action.yml" -->
@@ -15,7 +17,7 @@ Runs `pytest` with coverage (installing dependencies from `requirements.txt`/`se
 | --- | --- | --- | --- |
 | `working-directory` | <p>Directory containing the project source (relative to the checkout root)</p> | `false` | `.` |
 | `python-version` | <p>Python version to use</p> | `false` | `3.x` |
-| `test-directory` | <p>Directory containing tests</p> | `false` | `test` |
+| `test-directory` | <p>Directory containing tests</p> | `false` | `tests` |
 | `pytest-args` | <p>Additional pytest arguments</p> | `false` | `-v --cov --cov-report=xml --cov-report=term` |
 <!-- action-docs-inputs source="action.yml" -->
 

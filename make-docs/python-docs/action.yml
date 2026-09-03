@@ -1,6 +1,9 @@
 name: 'Python Documentation Generator'
 description: 'Generate Python project documentation using Sphinx and deploy to GitHub Pages'
 author: 'jasviers'
+branding:
+  icon: 'book'
+  color: 'purple'
 
 inputs:
   working-directory:

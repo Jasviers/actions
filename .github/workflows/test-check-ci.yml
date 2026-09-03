@@ -8,6 +8,17 @@ on:
       - "build/**"
       - "make-test/**"
       - "make-docs/**"
+      - "test/fixtures/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/test-check-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "source-analysis/**"
+      - "build/**"
+      - "make-test/**"
+      - "make-docs/**"
+      - "test/fixtures/**"
       - ".github/workflows/ci.yml"
       - ".github/workflows/test-check-ci.yml"
 
@@ -21,17 +32,93 @@ permissions:
   security-events: write
 
 jobs:
+  # Smoke test: every non-Docker language pipeline completes against a clean fixture.
   check-ci:
     strategy:
       fail-fast: false
       matrix:
-        language: [python, go, nodejs, terraform, ansible, kubernetes]
+        language: [go, nodejs, terraform, ansible, kubernetes]
     uses: ./.github/workflows/ci.yml
     with:
       language: ${{ matrix.language }}
       working-directory: test/fixtures/${{ matrix.language }}
-      dockerfile-path: test/fixtures/${{ matrix.language }}/Dockerfile
-      run-docker-build: ${{ matrix.language == 'python' }}
+      run-docker-build: false
       run-tests: ${{ matrix.language != 'terraform' && matrix.language != 'kubernetes' }}
-      skip-hadolint: ${{ matrix.language != 'python' }}
+      skip-hadolint: true
     secrets: inherit
+
+  # Python runs on its own so assert-outputs can read its outputs (matrix
+  # reusable-workflow jobs don't expose per-entry outputs).
+  check-ci-python:
+    uses: ./.github/workflows/ci.yml
+    with:
+      language: python
+      working-directory: test/fixtures/python
+      dockerfile-path: test/fixtures/python/Dockerfile
+      run-docker-build: true
+      run-tests: true
+      skip-hadolint: false
+    secrets: inherit
+
+  assert-outputs:
+    needs: check-ci-python
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: ci.yml must emit populated, single-line Docker outputs
+        env:
+          IMAGE_TAG: ${{ needs.check-ci-python.outputs.image-tag }}
+          IMAGE_DIGEST: ${{ needs.check-ci-python.outputs.image-digest }}
+        run: |
+          set -euo pipefail
+          printf 'image-tag=%s\nimage-digest=%s\n' "$IMAGE_TAG" "$IMAGE_DIGEST"
+          [ -n "$IMAGE_TAG" ] || { echo "::error::ci.yml did not emit image-tag"; exit 1; }
+          [ -n "$IMAGE_DIGEST" ] || { echo "::error::ci.yml did not emit image-digest"; exit 1; }
+          [ "$(printf '%s' "$IMAGE_TAG" | wc -l)" -eq 0 ] || { echo "::error::image-tag is multi-line"; exit 1; }
+
+  # Negative fixtures: quality-checks (run straight from the PR's code, not @v2)
+  # MUST fail on deliberately bad input, otherwise the language gate is broken.
+  reject-bad-fixtures:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: go
+            dir: test/fixtures/_negative/go
+          - language: ansible
+            dir: test/fixtures/_negative/ansible
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Run quality-checks on the bad fixture (expected to fail)
+        id: qc
+        continue-on-error: true
+        uses: ./source-analysis/quality-checks
+        with:
+          language: ${{ matrix.language }}
+          working-directory: ${{ matrix.dir }}
+          skip-markdown-checks: 'true'
+          skip-yamllint: 'true'
+          skip-shellcheck: 'true'
+          skip-hadolint: 'true'
+
+      - name: Assert it failed
+        env:
+          OUTCOME: ${{ steps.qc.outcome }}
+          LANGUAGE: ${{ matrix.language }}
+        run: |
+          set -euo pipefail
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "::error::quality-checks passed the $LANGUAGE negative fixture (outcome=$OUTCOME) — its gate is broken"
+            exit 1
+          fi
+          echo "quality-checks correctly rejected the $LANGUAGE negative fixture"

@@ -1,0 +1,40 @@
+name: Test Docs Scripts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'make-docs/**'
+      - 'test/bats/**'
+      - '.github/workflows/test-check-docs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'make-docs/**'
+      - 'test/bats/**'
+      - '.github/workflows/test-check-docs.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install bats
+        run: |
+          # renovate: datasource=npm depName=bats
+          npm install -g bats@1.13.0
+
+      - name: Run bats
+        run: bats --print-output-on-failure test/bats/

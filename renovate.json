@@ -5,8 +5,56 @@
     "helpers:pinGitHubActionDigests",
     ":semanticCommits"
   ],
+  "labels": ["dependencies"],
   "github-actions": {
     "enabled": true,
     "pinDigests": true
-  }
+  },
+  "packageRules": [
+    {
+      "description": "Group GitHub-maintained actions into one PR",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/**", "github/**"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Group the docker/* actions into one PR",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["docker/**"],
+      "groupName": "docker actions"
+    },
+    {
+      "description": "Auto-merge digest re-pins of an already-pinned action (same version, new SHA)",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": true
+    },
+    {
+      "description": "Keep the lint/scan tool versions in their own PR so a bad release is a one-line revert",
+      "matchDepNames": [
+        "ruff",
+        "yamllint",
+        "ansible-lint",
+        "markdownlint-cli",
+        "golangci/golangci-lint",
+        "terraform-linters/tflint",
+        "stackrox/kube-linter"
+      ],
+      "groupName": "lint and scan tools",
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Tool versions annotated with a '# renovate: datasource=… depName=…' comment",
+      "managerFilePatterns": [
+        "/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/",
+        "/(^|/)action\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+\\S[^\\n]*?(?<currentValue>v?\\d+\\.\\d+\\.\\d+)"
+      ]
+    }
+  ]
 }

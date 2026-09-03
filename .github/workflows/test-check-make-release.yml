@@ -6,6 +6,11 @@ on:
     paths:
       - 'make-release/**'
       - '.github/workflows/test-check-make-release.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'make-release/**'
+      - '.github/workflows/test-check-make-release.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,20 +20,47 @@ permissions:
   contents: read
 
 jobs:
-  test-make-release:
+  # Happy path: with a valid config, make-release verifies it and (dry-run) stops
+  # short of release-please, so no releases or PRs are created.
+  accepts-valid-config:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: write
-      pull-requests: write
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
           persist-credentials: false
 
-      - name: Test Make Release Action
+      - name: make-release (dry run)
         uses: ./make-release
+        with:
+          dry-run: 'true'
+
+  # Failure path: a missing config file must fail fast with a clear error.
+  rejects-missing-config:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: make-release with a non-existent config (expected to fail)
+        id: mr
+        continue-on-error: true
+        uses: ./make-release
+        with:
+          dry-run: 'true'
+          config-file: does-not-exist.json
+
+      - name: Assert it failed
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTCOME: ${{ steps.mr.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "::error::make-release accepted a missing config file (outcome=$OUTCOME)"
+            exit 1
+          fi
+          echo "make-release correctly rejected the missing config file"

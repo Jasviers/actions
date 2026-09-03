@@ -13,6 +13,10 @@ inputs:
     description: 'Path to the release-please manifest file, relative to the checkout root'
     required: false
     default: '.release-please-manifest.json'
+  dry-run:
+    description: 'Verify the release-please config/manifest exist and skip the release-please step (no releases, no PRs)'
+    required: false
+    default: 'false'
 
 outputs:
   release-created:
@@ -48,8 +52,15 @@ runs:
 
     - name: Make Release
       id: release-please
+      if: inputs.dry-run != 'true'
       uses: googleapis/release-please-action@v5
       with:
         token: ${{ inputs.token }}
         config-file: ${{ inputs.config-file }}
         manifest-file: ${{ inputs.manifest-file }}
+
+    - name: Dry run summary
+      if: inputs.dry-run == 'true'
+      shell: bash
+      run: |
+        echo "dry-run: release-please config verified, release step skipped"

@@ -20,6 +20,7 @@ Generates a changelog and release using [release-please](https://github.com/goog
 | `token` | <p>GitHub token</p> | `false` | `${{ github.token }}` |
 | `config-file` | <p>Path to the release-please config file, relative to the checkout root</p> | `false` | `release-please-config.json` |
 | `manifest-file` | <p>Path to the release-please manifest file, relative to the checkout root</p> | `false` | `.release-please-manifest.json` |
+| `dry-run` | <p>Verify the release-please config/manifest exist and skip the release-please step (no releases, no PRs)</p> | `false` | `false` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->

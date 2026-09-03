@@ -75,7 +75,9 @@ runs:
       if: inputs.language == 'python'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: pip install ruff
+      run: |
+        # renovate: datasource=pypi depName=ruff
+        pip install --quiet --disable-pip-version-check ruff==0.16.5
 
     - name: Run ruff lint (Python)
       if: inputs.language == 'python'
@@ -100,7 +102,8 @@ runs:
       if: inputs.language == 'go'
       uses: golangci/golangci-lint-action@v9
       with:
-        version: latest
+        # renovate: datasource=github-releases depName=golangci/golangci-lint
+        version: v2.13.2
         working-directory: ${{ inputs.working-directory }}
 
     - name: Run go fmt check (Go)
@@ -182,7 +185,8 @@ runs:
       if: inputs.language == 'terraform'
       uses: terraform-linters/setup-tflint@v6
       with:
-        tflint_version: latest
+        # renovate: datasource=github-releases depName=terraform-linters/tflint
+        tflint_version: v0.64.0
 
     - name: Run TFLint
       if: inputs.language == 'terraform'
@@ -201,7 +205,11 @@ runs:
       if: inputs.language == 'ansible'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: pip install --quiet --disable-pip-version-check ansible-lint yamllint
+      run: |
+        # renovate: datasource=pypi depName=ansible-lint
+        pip install --quiet --disable-pip-version-check ansible-lint==26.8.0
+        # renovate: datasource=pypi depName=yamllint
+        pip install --quiet --disable-pip-version-check yamllint==1.38.0
 
     - name: Run yamllint (Ansible)
       if: inputs.language == 'ansible'
@@ -227,6 +235,7 @@ runs:
       uses: stackrox/kube-linter-action@v1
       with:
         directory: ${{ inputs.working-directory }}
+        # renovate: datasource=github-releases depName=stackrox/kube-linter
         version: '0.8.3'
 
     - name: Set up Node.js for Markdown checks
@@ -238,7 +247,9 @@ runs:
     - name: Install markdownlint-cli
       if: inputs.skip-markdown-checks == 'false'
       shell: bash
-      run: npm install -g markdownlint-cli
+      run: |
+        # renovate: datasource=npm depName=markdownlint-cli
+        npm install -g markdownlint-cli@0.49.1
 
     - name: Run markdownlint
       if: inputs.skip-markdown-checks == 'false'
@@ -250,7 +261,8 @@ runs:
       if: inputs.skip-yamllint == 'false'
       shell: bash
       run: |
-        command -v yamllint >/dev/null 2>&1 || pip install --quiet --disable-pip-version-check yamllint
+        # renovate: datasource=pypi depName=yamllint
+        command -v yamllint >/dev/null 2>&1 || pip install --quiet --disable-pip-version-check yamllint==1.38.0
         yamllint .
 
     - name: Run shellcheck

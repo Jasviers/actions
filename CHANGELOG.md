@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.2.0](https://github.com/Jasviers/actions/compare/v2.1.0...v2.2.0) (2026-09-03)
+
+
+### ✨ Features
+
+* add hardening to more security ([b2ba0fe](https://github.com/Jasviers/actions/commit/b2ba0fe220a1fc42a2273dfa961325e59d1c4174))
+* add more test ([76a304d](https://github.com/Jasviers/actions/commit/76a304d9114dbc27022b244b3f8abf82c5a6dbb2))
+* cleanance ([de8387f](https://github.com/Jasviers/actions/commit/de8387fc2c14bd49ab384c66bbd0f6afb89d084f))
+* improve python docs generation ([886882d](https://github.com/Jasviers/actions/commit/886882d5eeb3cb0693c795f7050e47834fda40df))
+
+
+### 🐛 Fixes
+
+* some errors and update docs ([0f6e2f1](https://github.com/Jasviers/actions/commit/0f6e2f13cdbee855a83faaf08dd569f1aa6ccff1))
+
 ## [2.1.0](https://github.com/Jasviers/actions/compare/v2.0.1...v2.1.0) (2026-09-02)
 
 

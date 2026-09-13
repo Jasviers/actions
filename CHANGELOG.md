@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/Jasviers/actions/compare/v2.2.0...v2.3.0) (2026-09-13)
+
+
+### ✨ Features
+
+* add ignore patterns for k8s ([5f2c8ce](https://github.com/Jasviers/actions/commit/5f2c8ce1ecc7069fde93f774656cfb2394d7a115))
+
 ## [2.2.0](https://github.com/Jasviers/actions/compare/v2.1.0...v2.2.0) (2026-09-03)
 
 

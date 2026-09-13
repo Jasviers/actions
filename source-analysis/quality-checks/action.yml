@@ -45,6 +45,10 @@ inputs:
     description: 'Skip yamllint on YAML files (style/syntax only — no Kubernetes schema/best-practice checks)'
     required: false
     default: 'false'
+  kubeconform-ignore-filename-pattern:
+    description: 'Regular expression of file paths for kubeconform to skip (e.g. YAML files that are not Kubernetes manifests). Passed as -ignore-filename-pattern; left empty to check every file.'
+    required: false
+    default: ''
   dockerfile-path:
     description: 'Path to Dockerfile'
     required: false
@@ -240,11 +244,26 @@ runs:
       run: ansible-lint
 
     # Kubernetes Setup and Linting
+    - name: Compute kubeconform args (Kubernetes)
+      id: kubeconform_args
+      if: inputs.language == 'kubernetes'
+      shell: bash
+      env:
+        IGNORE_PATTERN: ${{ inputs.kubeconform-ignore-filename-pattern }}
+        WORKING_DIR: ${{ inputs.working-directory }}
+      run: |
+        args="-summary -strict -ignore-missing-schemas"
+        if [ -n "$IGNORE_PATTERN" ]; then
+          args="$args -ignore-filename-pattern $IGNORE_PATTERN"
+        fi
+        args="$args $WORKING_DIR"
+        echo "value=$args" >> "$GITHUB_OUTPUT"
+
     - name: Run kubeconform (Kubernetes)
       if: inputs.language == 'kubernetes'
       uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
       with:
-        args: -summary -strict -ignore-missing-schemas ${{ inputs.working-directory }}
+        args: ${{ steps.kubeconform_args.outputs.value }}
 
     - name: Run kube-linter (Kubernetes)
       if: inputs.language == 'kubernetes'

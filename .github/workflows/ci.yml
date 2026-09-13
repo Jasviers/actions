@@ -99,6 +99,11 @@ on:
         required: false
         type: boolean
         default: false
+      kubeconform-ignore-filename-pattern:
+        description: "Regular expression of file paths for kubeconform to skip (only used when language is kubernetes)"
+        required: false
+        type: string
+        default: ""
     outputs:
       image-tag:
         description: "Full image tag with registry (empty if run-docker-build was false)"
@@ -139,6 +144,7 @@ jobs:
           skip-markdown-checks: ${{ inputs.skip-markdown-checks }}
           skip-shellcheck: ${{ inputs.skip-shellcheck }}
           skip-yamllint: ${{ inputs.skip-yamllint }}
+          kubeconform-ignore-filename-pattern: ${{ inputs.kubeconform-ignore-filename-pattern }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image

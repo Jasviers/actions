@@ -26,6 +26,7 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 | `skip-markdown-checks` | <p>Skip Markdown linting and formatting checks</p> | `false` | `false` |
 | `skip-shellcheck` | <p>Skip shellcheck on shell scripts</p> | `false` | `false` |
 | `skip-yamllint` | <p>Skip yamllint on YAML files (style/syntax only — no Kubernetes schema/best-practice checks)</p> | `false` | `false` |
+| `kubeconform-ignore-filename-pattern` | <p>Regular expression of file paths for kubeconform to skip (e.g. YAML files that are not Kubernetes manifests). Passed as -ignore-filename-pattern; left empty to check every file.</p> | `false` | `""` |
 | `dockerfile-path` | <p>Path to Dockerfile</p> | `false` | `./Dockerfile` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->

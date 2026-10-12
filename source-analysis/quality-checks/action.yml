@@ -271,7 +271,7 @@ runs:
       with:
         directory: ${{ inputs.working-directory }}
         # renovate: datasource=github-releases depName=stackrox/kube-linter
-        version: '0.8.3'
+        version: v0.8.3
 
     - name: Set up Node.js for Markdown checks
       if: inputs.skip-markdown-checks == 'false'

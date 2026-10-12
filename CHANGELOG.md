@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/Jasviers/actions/compare/v2.3.0...v2.3.1) (2026-10-12)
+
+
+### 🐛 Fixes
+
+* kubelinter version ([83f4a6e](https://github.com/Jasviers/actions/commit/83f4a6ed3a62a4665a78399926d2e2ec80b21b17))
+
 ## [2.3.0](https://github.com/Jasviers/actions/compare/v2.2.0...v2.3.0) (2026-09-13)
 
 

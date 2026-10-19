@@ -19,4 +19,5 @@ Scans the source tree with [Trivy](https://trivy.dev/) in filesystem mode (alway
 | `working-directory` | <p>Directory containing the project source (relative to the checkout root)</p> | `false` | `.` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
 | `docker-image` | <p>Docker image reference for Trivy scan</p> | `false` | `""` |
+| `artifact-suffix` | <p>Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run.</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->

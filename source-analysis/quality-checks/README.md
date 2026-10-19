@@ -29,6 +29,7 @@ The multi-language linting hub: dispatches on `language` to run `ruff` (python),
 | `kubeconform-ignore-filename-pattern` | <p>Regular expression of file paths for kubeconform to skip (e.g. YAML files that are not Kubernetes manifests). Passed as -ignore-filename-pattern; left empty to check every file.</p> | `false` | `""` |
 | `dockerfile-path` | <p>Path to Dockerfile</p> | `false` | `./Dockerfile` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
+| `artifact-suffix` | <p>Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run.</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->

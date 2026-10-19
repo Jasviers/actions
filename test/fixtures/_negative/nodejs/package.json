@@ -1,0 +1,6 @@
+{
+  "name": "actions-negative-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Uses an eslint.config.mjs (the ESLint 9+ default) with a lint error: quality-checks must detect the config and fail."
+}

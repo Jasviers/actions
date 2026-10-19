@@ -18,6 +18,7 @@ Runs `go test ./... -coverprofile=coverage.out`, with an optional minimum-covera
 | `working-directory` | <p>Directory containing the project source (relative to the checkout root)</p> | `false` | `.` |
 | `go-version` | <p>Go version to use</p> | `false` | `stable` |
 | `min-coverage` | <p>Minimum total coverage percentage required (0 disables the gate)</p> | `false` | `0` |
+| `artifact-suffix` | <p>Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run.</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->

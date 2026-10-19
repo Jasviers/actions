@@ -19,6 +19,7 @@ Tests are collected from `tests/` by default — pass `test-directory: test` (or
 | `python-version` | <p>Python version to use</p> | `false` | `3.x` |
 | `test-directory` | <p>Directory containing tests</p> | `false` | `tests` |
 | `pytest-args` | <p>Additional pytest arguments</p> | `false` | `-v --cov --cov-report=xml --cov-report=term` |
+| `artifact-suffix` | <p>Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run.</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->
 
 <!-- action-docs-outputs source="action.yml" -->

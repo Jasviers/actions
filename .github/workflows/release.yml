@@ -52,6 +52,9 @@ on:
       image-tag:
         description: 'Full image tag with registry (empty unless a release was created and run-docker-build was true)'
         value: ${{ jobs.release.outputs.image-tag }}
+      image-ref:
+        description: 'Immutable image reference, image@digest (empty unless a release was created and run-docker-build was true)'
+        value: ${{ jobs.release.outputs.image-ref }}
       page-url:
         description: 'URL of the deployed documentation site (empty unless a release was created, run-docs was true and language is python)'
         value: ${{ jobs.docs.outputs.page-url }}
@@ -71,6 +74,7 @@ jobs:
       release-created: ${{ steps.make_release.outputs.release-created }}
       tag-name: ${{ steps.make_release.outputs.tag-name }}
       image-tag: ${{ steps.docker_build.outputs.image-tag }}
+      image-ref: ${{ steps.docker_build.outputs.image-ref }}
     steps:
       - name: Make Release
         id: make_release
@@ -89,6 +93,12 @@ jobs:
           registry: ${{ inputs.docker-registry }}
           image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
           generate-sbom: ${{ inputs.generate-sbom }}
+          # This runs on a push to the default branch, where metadata-action's defaults
+          # would only produce ':<branch>'. Tag the image with the release version instead.
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.make_release.outputs.tag-name }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.make_release.outputs.tag-name }}
+            type=raw,value=latest
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   docs:

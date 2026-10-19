@@ -18,6 +18,10 @@ inputs:
     description: 'Minimum total coverage percentage required (0 disables the gate)'
     required: false
     default: '0'
+  artifact-suffix:
+    description: "Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run."
+    required: false
+    default: ''
 
 outputs:
   coverage-file:
@@ -55,7 +59,7 @@ runs:
       uses: actions/upload-artifact@v7
       if: always()
       with:
-        name: coverage-report
+        name: coverage-report${{ inputs.artifact-suffix }}
         path: ${{ inputs.working-directory }}/coverage.out
         retention-days: 30
 

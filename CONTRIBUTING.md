@@ -34,8 +34,10 @@ bad input.
 
 **Known limitation:** `ci.yml` references the sub-actions as `Jasviers/actions/...@v2`, so a
 PR that changes a composite action is smoke-tested against the *published* `@v2`, not the PR's
-code — except the `reject-bad-fixtures` job, which calls `quality-checks` by local path, and
-`test-check-make-release.yml`, which calls `./make-release`.
+code — except the `local-quality-checks` and `reject-bad-fixtures` jobs, which call
+`quality-checks` by local path, and `test-check-make-release.yml`, which calls `./make-release`.
+So on such a PR a red `check-ci (<lang>)` with a green `local-quality-checks (<lang>)` usually
+means the fix is correct but not released yet.
 
 ## Composite action READMEs
 

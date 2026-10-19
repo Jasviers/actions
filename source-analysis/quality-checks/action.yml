@@ -205,7 +205,7 @@ runs:
       uses: golangci/golangci-lint-action@v9
       with:
         # renovate: datasource=github-releases depName=golangci/golangci-lint
-        version: v2.13.2
+        version: v2.15.0
         working-directory: ${{ inputs.working-directory }}
 
     - name: Run go fmt check (Go)
@@ -364,10 +364,28 @@ runs:
       with:
         args: ${{ steps.kubeconform_args.outputs.value }}
 
+    # Installed directly instead of via stackrox/kube-linter-action: that action untars the
+    # release (kube-linter, README.md, LICENSE) into the workspace root, overwriting the
+    # caller's own README.md/LICENSE and tripping markdownlint.
+    - name: Install kube-linter (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      shell: bash
+      env:
+        # renovate: datasource=github-releases depName=stackrox/kube-linter
+        KUBE_LINTER_VERSION: v0.8.3
+      run: |
+        case "$RUNNER_ARCH" in
+          ARM64) asset=kube-linter-linux_arm64.tar.gz ;;
+          *) asset=kube-linter-linux.tar.gz ;;
+        esac
+        dir="$RUNNER_TEMP/kube-linter"
+        mkdir -p "$dir"
+        curl -sSfL "https://github.com/stackrox/kube-linter/releases/download/$KUBE_LINTER_VERSION/$asset" | tar -xz -C "$dir"
+        echo "$dir" >> "$GITHUB_PATH"
+
     - name: Run kube-linter (Kubernetes)
       if: inputs.language == 'kubernetes'
-      uses: stackrox/kube-linter-action@v1
-      with:
-        directory: ${{ inputs.working-directory }}
-        # renovate: datasource=github-releases depName=stackrox/kube-linter
-        version: v0.8.3
+      shell: bash
+      env:
+        WORKING_DIR: ${{ inputs.working-directory }}
+      run: kube-linter lint "$WORKING_DIR"

@@ -57,6 +57,10 @@ inputs:
     description: 'GitHub token for uploading SARIF results'
     required: false
     default: ''
+  artifact-suffix:
+    description: "Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run."
+    required: false
+    default: ''
 
 outputs:
   hadolint-sarif:
@@ -83,6 +87,84 @@ runs:
       uses: actions/checkout@v7
       with:
         persist-credentials: false
+
+    # Universal checks. They glob the whole repo, so they run before any language step
+    # creates node_modules/, .terraform/ or similar trees full of third-party files.
+    - name: Set up Node.js for Markdown checks
+      if: inputs.skip-markdown-checks == 'false'
+      uses: actions/setup-node@v7
+      with:
+        node-version: 'lts/*'
+
+    - name: Install markdownlint-cli
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: |
+        # renovate: datasource=npm depName=markdownlint-cli
+        npm install -g markdownlint-cli@0.49.1
+
+    - name: Run markdownlint
+      if: inputs.skip-markdown-checks == 'false'
+      shell: bash
+      run: |
+        if ls .markdownlint.{yml,yaml,json,jsonc} >/dev/null 2>&1; then
+          markdownlint "**/*.md" --ignore "CHANGELOG.md" --ignore node_modules
+        else
+          echo "No .markdownlint config in the repo — using the bundled default"
+          markdownlint "**/*.md" --ignore "CHANGELOG.md" --ignore node_modules --config "${{ github.action_path }}/markdownlint.default.yml"
+        fi
+
+    - name: Run yamllint
+      if: inputs.skip-yamllint == 'false'
+      shell: bash
+      run: |
+        # renovate: datasource=pypi depName=yamllint
+        command -v yamllint >/dev/null 2>&1 || pip install --quiet --disable-pip-version-check yamllint==1.38.0
+        yamllint .
+
+    - name: Run shellcheck
+      if: inputs.skip-shellcheck == 'false'
+      uses: ludeeus/action-shellcheck@2.0.0
+      with:
+        severity: warning
+
+    - name: Run hadolint (Dockerfile linting)
+      id: hadolint
+      if: inputs.skip-hadolint == 'false'
+      uses: hadolint/hadolint-action@v3.5.0
+      with:
+        dockerfile: ${{ inputs.dockerfile-path }}
+        format: sarif
+        output-file: hadolint-results.sarif
+        no-fail: true
+
+    - name: Check if hadolint results exist
+      id: check-hadolint
+      if: inputs.skip-hadolint == 'false'
+      shell: bash
+      run: |
+        if [ -f hadolint-results.sarif ]; then
+          echo "sarif-file=hadolint-results.sarif" >> $GITHUB_OUTPUT
+        else
+          echo "sarif-file=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload hadolint results to GitHub
+      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: hadolint-results.sarif
+        wait-for-processing: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Upload hadolint SARIF output
+      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
+      uses: actions/upload-artifact@v7
+      with:
+        name: hadolint-sarif${{ inputs.artifact-suffix }}
+        path: hadolint-results.sarif
 
     # Python Setup and Linting
     - name: Set up Python
@@ -123,7 +205,7 @@ runs:
       uses: golangci/golangci-lint-action@v9
       with:
         # renovate: datasource=github-releases depName=golangci/golangci-lint
-        version: v2.13.2
+        version: v2.15.0
         working-directory: ${{ inputs.working-directory }}
 
     - name: Run go fmt check (Go)
@@ -163,7 +245,10 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f eslint.config.js ]; then
+        has_config() { for f in "$@"; do [ -f "$f" ] && return 0; done; return 1; }
+        in_package_json() { node -e 'process.exit(require("./package.json")[process.argv[1]] ? 0 : 1)' "$1" 2>/dev/null; }
+        if has_config eslint.config.{js,mjs,cjs,ts,mts,cts} .eslintrc .eslintrc.{js,cjs,json,yml,yaml} \
+          || in_package_json eslintConfig; then
           npx eslint .
         else
           echo "No ESLint config found, skipping ESLint"
@@ -174,7 +259,10 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        if [ -f .prettierrc ] || [ -f .prettierrc.json ] || [ -f .prettierrc.js ] || [ -f prettier.config.js ]; then
+        has_config() { for f in "$@"; do [ -f "$f" ] && return 0; done; return 1; }
+        in_package_json() { node -e 'process.exit(require("./package.json")[process.argv[1]] ? 0 : 1)' "$1" 2>/dev/null; }
+        if has_config .prettierrc .prettierrc.{json,json5,yml,yaml,toml,js,mjs,cjs,ts,mts,cts} prettier.config.{js,mjs,cjs,ts,mts,cts} \
+          || in_package_json prettier; then
           npx prettier --check .
         else
           echo "No Prettier config found, skipping Prettier"
@@ -197,9 +285,20 @@ runs:
       if: inputs.language == 'terraform'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      # One init + validate per module directory. (`find -execdir … \;` ran them once per
+      # file and always exited 0, so validation errors never failed the step.)
       run: |
-        find . -name "*.tf" -type f -execdir terraform init -backend=false \;
-        find . -name "*.tf" -type f -execdir terraform validate \;
+        mapfile -t dirs < <(find . -name '*.tf' -type f -not -path '*/.terraform/*' -printf '%h\n' | sort -u)
+        rc=0
+        for dir in "${dirs[@]}"; do
+          echo "::group::terraform validate $dir"
+          if ! (cd "$dir" && terraform init -backend=false -input=false && terraform validate); then
+            echo "::error::terraform validate failed in $dir"
+            rc=1
+          fi
+          echo "::endgroup::"
+        done
+        exit "$rc"
 
     - name: Run tflint (Terraform)
       if: inputs.language == 'terraform'
@@ -212,7 +311,7 @@ runs:
       if: inputs.language == 'terraform'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: tflint --init && tflint
+      run: tflint --init && tflint --recursive
 
     # Ansible Setup and Linting
     - name: Set up Python (Ansible)
@@ -265,86 +364,28 @@ runs:
       with:
         args: ${{ steps.kubeconform_args.outputs.value }}
 
+    # Installed directly instead of via stackrox/kube-linter-action: that action untars the
+    # release (kube-linter, README.md, LICENSE) into the workspace root, overwriting the
+    # caller's own README.md/LICENSE and tripping markdownlint.
+    - name: Install kube-linter (Kubernetes)
+      if: inputs.language == 'kubernetes'
+      shell: bash
+      env:
+        # renovate: datasource=github-releases depName=stackrox/kube-linter
+        KUBE_LINTER_VERSION: v0.8.3
+      run: |
+        case "$RUNNER_ARCH" in
+          ARM64) asset=kube-linter-linux_arm64.tar.gz ;;
+          *) asset=kube-linter-linux.tar.gz ;;
+        esac
+        dir="$RUNNER_TEMP/kube-linter"
+        mkdir -p "$dir"
+        curl -sSfL "https://github.com/stackrox/kube-linter/releases/download/$KUBE_LINTER_VERSION/$asset" | tar -xz -C "$dir"
+        echo "$dir" >> "$GITHUB_PATH"
+
     - name: Run kube-linter (Kubernetes)
       if: inputs.language == 'kubernetes'
-      uses: stackrox/kube-linter-action@v1
-      with:
-        directory: ${{ inputs.working-directory }}
-        # renovate: datasource=github-releases depName=stackrox/kube-linter
-        version: v0.8.3
-
-    - name: Set up Node.js for Markdown checks
-      if: inputs.skip-markdown-checks == 'false'
-      uses: actions/setup-node@v7
-      with:
-        node-version: 'lts/*'
-
-    - name: Install markdownlint-cli
-      if: inputs.skip-markdown-checks == 'false'
       shell: bash
-      run: |
-        # renovate: datasource=npm depName=markdownlint-cli
-        npm install -g markdownlint-cli@0.49.1
-
-    - name: Run markdownlint
-      if: inputs.skip-markdown-checks == 'false'
-      shell: bash
-      run: |
-        if ls .markdownlint.{yml,yaml,json,jsonc} >/dev/null 2>&1; then
-          markdownlint "**/*.md" --ignore "CHANGELOG.md"
-        else
-          echo "No .markdownlint config in the repo — using the bundled default"
-          markdownlint "**/*.md" --ignore "CHANGELOG.md" --config "${{ github.action_path }}/markdownlint.default.yml"
-        fi
-
-    - name: Run yamllint
-      if: inputs.skip-yamllint == 'false'
-      shell: bash
-      run: |
-        # renovate: datasource=pypi depName=yamllint
-        command -v yamllint >/dev/null 2>&1 || pip install --quiet --disable-pip-version-check yamllint==1.38.0
-        yamllint .
-
-    - name: Run shellcheck
-      if: inputs.skip-shellcheck == 'false'
-      uses: ludeeus/action-shellcheck@2.0.0
-      with:
-        severity: warning
-
-    - name: Run hadolint (Dockerfile linting)
-      id: hadolint
-      if: inputs.skip-hadolint == 'false'
-      uses: hadolint/hadolint-action@v3.5.0
-      with:
-        dockerfile: ${{ inputs.dockerfile-path }}
-        format: sarif
-        output-file: hadolint-results.sarif
-        no-fail: true
-
-    - name: Check if hadolint results exist
-      id: check-hadolint
-      if: inputs.skip-hadolint == 'false'
-      shell: bash
-      run: |
-        if [ -f hadolint-results.sarif ]; then
-          echo "sarif-file=hadolint-results.sarif" >> $GITHUB_OUTPUT
-        else
-          echo "sarif-file=" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Upload hadolint results to GitHub
-      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: github/codeql-action/upload-sarif@v4
-      continue-on-error: true
-      with:
-        sarif_file: hadolint-results.sarif
-        wait-for-processing: true
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-
-    - name: Upload hadolint SARIF output
-      if: inputs.skip-hadolint == 'false' && steps.check-hadolint.outputs.sarif-file != ''
-      uses: actions/upload-artifact@v7
-      with:
-        name: hadolint-sarif
-        path: hadolint-results.sarif
+        WORKING_DIR: ${{ inputs.working-directory }}
+      run: kube-linter lint "$WORKING_DIR"

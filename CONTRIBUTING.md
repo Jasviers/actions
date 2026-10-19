@@ -28,13 +28,16 @@ reads them to build `CHANGELOG.md` and pick the next version:
 | a script under `make-docs/` | `test-check-docs.yml` |
 
 `test-check-ci.yml` covers the six languages against `test/fixtures/<lang>/`, asserts the
-Docker outputs of `ci.yml`, and runs `test/fixtures/_negative/` through
-`source-analysis/quality-checks` to prove the language gates actually fail on bad input.
+Docker outputs of `ci.yml`, and runs `test/fixtures/_negative/` (go, ansible, terraform,
+nodejs) through `source-analysis/quality-checks` to prove the language gates actually fail on
+bad input.
 
 **Known limitation:** `ci.yml` references the sub-actions as `Jasviers/actions/...@v2`, so a
 PR that changes a composite action is smoke-tested against the *published* `@v2`, not the PR's
-code — except the `reject-bad-fixtures` job, which calls `quality-checks` by local path, and
-`test-check-make-release.yml`, which calls `./make-release`.
+code — except the `local-quality-checks` and `reject-bad-fixtures` jobs, which call
+`quality-checks` by local path, and `test-check-make-release.yml`, which calls `./make-release`.
+So on such a PR a red `check-ci (<lang>)` with a green `local-quality-checks (<lang>)` usually
+means the fix is correct but not released yet.
 
 ## Composite action READMEs
 

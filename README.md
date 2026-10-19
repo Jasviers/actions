@@ -50,8 +50,12 @@ Key inputs: `language` (required), `working-directory` (default `.`, for monorep
 default `true`). CodeQL runs for `python`, `go`, `nodejs`; `terraform`, `ansible`,
 `kubernetes` skip it. Tests run for `python`, `go`, `nodejs` and `ansible`
 (`ansible-playbook --syntax-check`); `terraform`/`kubernetes` have no separate test runner —
-their validation happens in `quality-checks`. Outputs `image-tag` / `image-digest` when a
-Docker build ran.
+their validation happens in `quality-checks`. Outputs `image-tag` / `image-digest` /
+`image-ref` (`image@digest`) when a Docker build ran.
+
+If you call `ci.yml` more than once in the same run (a matrix, or several services in a
+monorepo), pass a distinct `artifact-suffix` (e.g. `-${{ matrix.service }}`): uploaded
+artifact names must be unique per run.
 
 Add a `concurrency` block to your calling workflow (as above) — `ci.yml` deliberately does
 not set one, because a reusable workflow's concurrency group can cancel sibling matrix calls.
@@ -88,7 +92,9 @@ jobs:
 `.release-please-manifest.json` at your repo root (or point `config-file` / `manifest-file`
 at a custom path). `make-release` fails fast with a clear error if either is missing.
 
-Outputs `release-created`, `tag-name`, `image-tag` and `page-url`. The docs job runs in the
+The release image is tagged `X.Y.Z`, `X.Y` and `latest`.
+
+Outputs `release-created`, `tag-name`, `image-tag`, `image-ref` and `page-url`. The docs job runs in the
 `github-pages` environment — enable **Settings → Pages → Source: GitHub Actions** in the
 consumer repo, or pass `run-docs: false`.
 

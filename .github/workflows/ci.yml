@@ -104,6 +104,11 @@ on:
         required: false
         type: string
         default: ""
+      artifact-suffix:
+        description: "Suffix appended to every uploaded artifact name (e.g. '-python'). Required when this workflow is called more than once per run (matrix/monorepo), since artifact names must be unique per run"
+        required: false
+        type: string
+        default: ""
     outputs:
       image-tag:
         description: "Full image tag with registry (empty if run-docker-build was false)"
@@ -111,6 +116,9 @@ on:
       image-digest:
         description: "Image digest (empty if run-docker-build was false)"
         value: ${{ jobs.ci.outputs.image-digest }}
+      image-ref:
+        description: "Immutable image reference, image@digest (empty if run-docker-build was false)"
+        value: ${{ jobs.ci.outputs.image-ref }}
 
 permissions:
   contents: read
@@ -124,6 +132,7 @@ jobs:
     outputs:
       image-tag: ${{ steps.docker_build.outputs.image-tag }}
       image-digest: ${{ steps.docker_build.outputs.image-digest }}
+      image-ref: ${{ steps.docker_build.outputs.image-ref }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -145,6 +154,7 @@ jobs:
           skip-shellcheck: ${{ inputs.skip-shellcheck }}
           skip-yamllint: ${{ inputs.skip-yamllint }}
           kubeconform-ignore-filename-pattern: ${{ inputs.kubeconform-ignore-filename-pattern }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
@@ -156,6 +166,10 @@ jobs:
           registry: ${{ inputs.docker-registry }}
           image-name: ${{ inputs.docker-image-name != '' && inputs.docker-image-name || github.repository }}
           generate-sbom: ${{ inputs.generate-sbom }}
+          # Only override when set explicitly: the default './Dockerfile' is relative to the
+          # checkout root, while docker-build defaults to <working-directory>/Dockerfile.
+          dockerfile: ${{ inputs.dockerfile-path != './Dockerfile' && inputs.dockerfile-path || '' }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Compliance
@@ -167,6 +181,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
           go-version: ${{ inputs.go-version }}
           codeql-queries: ${{ inputs.codeql-queries }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Security
@@ -175,7 +190,9 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          docker-image: ${{ inputs.run-docker-build && steps.docker_build.outputs.image-tag || '' }}
+          # Scan by digest: image-tag can hold several tags, image-ref is a single immutable ref.
+          docker-image: ${{ inputs.run-docker-build && (steps.docker_build.outputs.image-ref || steps.docker_build.outputs.image-tag) || '' }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
 
       - name: Run Unit Tests (Python)
         if: inputs.run-tests && inputs.language == 'python'
@@ -185,6 +202,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
           test-directory: ${{ inputs.test-directory }}
           pytest-args: ${{ inputs.pytest-args }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
 
       - name: Run Unit Tests (Go)
         if: inputs.run-tests && inputs.language == 'go'
@@ -192,6 +210,7 @@ jobs:
         with:
           working-directory: ${{ inputs.working-directory }}
           go-version: ${{ inputs.go-version }}
+          artifact-suffix: ${{ inputs.artifact-suffix }}
 
       - name: Run Unit Tests (Node.js)
         if: inputs.run-tests && inputs.language == 'nodejs'

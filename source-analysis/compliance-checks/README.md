@@ -25,4 +25,5 @@ Runs [CodeQL](https://codeql.github.com/) analysis for `python`, `go`, or `nodej
 | `codeql-queries` | <p>CodeQL query suite to use (default, security-extended, or security-and-quality)</p> | `false` | `security-and-quality` |
 | `upload-sarif` | <p>Upload SARIF results to GitHub Security</p> | `false` | `true` |
 | `github-token` | <p>GitHub token for uploading SARIF results</p> | `false` | `""` |
+| `artifact-suffix` | <p>Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run.</p> | `false` | `""` |
 <!-- action-docs-inputs source="action.yml" -->

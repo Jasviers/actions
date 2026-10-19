@@ -29,14 +29,32 @@ inputs:
     description: 'Generate a Software Bill of Materials (SPDX JSON) for the built image and upload it as an artifact'
     required: false
     default: 'false'
+  dockerfile:
+    description: 'Path to the Dockerfile, relative to the checkout root (defaults to Dockerfile inside working-directory)'
+    required: false
+    default: ''
+  tags:
+    description: 'docker/metadata-action tag rules, one per line (e.g. type=semver,pattern={{version}},value=v1.2.3). Empty uses the metadata-action defaults (branch / PR / git tag name)'
+    required: false
+    default: ''
+  artifact-suffix:
+    description: "Suffix appended to every uploaded artifact name, e.g. '-python'. Set it when the action runs more than once per workflow run (matrix or monorepo), since artifact names must be unique per run."
+    required: false
+    default: ''
 
 outputs:
   image-tag:
-    description: 'Full image tag with registry'
+    description: 'Primary image tag with registry (the first one when several tags are generated)'
+    value: ${{ steps.refs.outputs.image-tag }}
+  image-tags:
+    description: 'Every generated image tag with registry, newline-separated'
     value: ${{ steps.meta.outputs.tags }}
   image-digest:
     description: 'Image digest'
     value: ${{ steps.build-and-push.outputs.digest }}
+  image-ref:
+    description: 'Immutable image reference, image@digest (empty unless the image was pushed)'
+    value: ${{ steps.refs.outputs.image-ref }}
 
 runs:
   using: 'composite'
@@ -57,22 +75,41 @@ runs:
       uses: docker/metadata-action@v6
       with:
         images: ${{ inputs.registry }}/${{ inputs.image-name }}
+        tags: ${{ inputs.tags }}
 
     - name: Build and push Docker image
       id: build-and-push
       uses: docker/build-push-action@v7
       with:
         context: ${{ inputs.working-directory }}
+        file: ${{ inputs.dockerfile }}
         push: ${{ inputs.push }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Compute image references
+      id: refs
+      shell: bash
+      env:
+        TAGS: ${{ steps.meta.outputs.tags }}
+        DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        PUSH: ${{ inputs.push }}
+      run: |
+        tag="$(printf '%s\n' "$TAGS" | sed -n '1p')"
+        echo "image-tag=$tag" >> "$GITHUB_OUTPUT"
+        if [ "$PUSH" = "true" ] && [ -n "$DIGEST" ]; then
+          # Strip the ':<tag>' suffix (a tag never contains ':', a registry port can).
+          echo "image-ref=${tag%:*}@$DIGEST" >> "$GITHUB_OUTPUT"
+        else
+          echo "image-ref=" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Generate SBOM
       if: inputs.generate-sbom == 'true' && inputs.push == 'true'
       uses: anchore/sbom-action@v0.24.2
       with:
-        image: ${{ steps.meta.outputs.tags }}
+        image: ${{ steps.refs.outputs.image-ref || steps.refs.outputs.image-tag }}
         format: spdx-json
-        artifact-name: docker-sbom
+        artifact-name: docker-sbom${{ inputs.artifact-suffix }}

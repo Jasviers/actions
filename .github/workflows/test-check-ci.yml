@@ -44,6 +44,7 @@ jobs:
       run-docker-build: false
       run-tests: ${{ matrix.language != 'terraform' && matrix.language != 'kubernetes' }}
       skip-hadolint: true
+      artifact-suffix: -${{ matrix.language }}
     secrets: inherit
 
   check-ci-python:
@@ -55,6 +56,7 @@ jobs:
       run-docker-build: true
       run-tests: true
       skip-hadolint: false
+      artifact-suffix: -python
     secrets: inherit
 
   assert-outputs:
@@ -68,12 +70,45 @@ jobs:
         env:
           IMAGE_TAG: ${{ needs.check-ci-python.outputs.image-tag }}
           IMAGE_DIGEST: ${{ needs.check-ci-python.outputs.image-digest }}
+          IMAGE_REF: ${{ needs.check-ci-python.outputs.image-ref }}
         run: |
           set -euo pipefail
-          printf 'image-tag=%s\nimage-digest=%s\n' "$IMAGE_TAG" "$IMAGE_DIGEST"
+          printf 'image-tag=%s\nimage-digest=%s\nimage-ref=%s\n' "$IMAGE_TAG" "$IMAGE_DIGEST" "$IMAGE_REF"
           [ -n "$IMAGE_TAG" ] || { echo "::error::ci.yml did not emit image-tag"; exit 1; }
           [ -n "$IMAGE_DIGEST" ] || { echo "::error::ci.yml did not emit image-digest"; exit 1; }
           [ "$(printf '%s' "$IMAGE_TAG" | wc -l)" -eq 0 ] || { echo "::error::image-tag is multi-line"; exit 1; }
+          # ci.yml calls docker-build@v2, so on a PR that adds image-ref the published
+          # action doesn't emit it yet. Tolerate empty; validate the format when present.
+          if [ -z "$IMAGE_REF" ]; then
+            echo "::warning::image-ref is empty (published docker-build@v2 predates it)"
+          else
+            [ "$IMAGE_REF" = "${IMAGE_TAG%:*}@$IMAGE_DIGEST" ] || { echo "::error::image-ref is not <image>@<digest>"; exit 1; }
+          fi
+
+  # check-ci* go through ci.yml, which pins the sub-actions to the published @v2. This job
+  # runs quality-checks from *this* commit, so a PR that changes it is actually tested.
+  local-quality-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, go, nodejs, terraform, ansible, kubernetes]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Run quality-checks from this commit
+        uses: ./source-analysis/quality-checks
+        with:
+          language: ${{ matrix.language }}
+          working-directory: test/fixtures/${{ matrix.language }}
+          skip-hadolint: "true"
+          artifact-suffix: -local-${{ matrix.language }}
 
   reject-bad-fixtures:
     runs-on: ubuntu-24.04
@@ -88,6 +123,10 @@ jobs:
             dir: test/fixtures/_negative/go
           - language: ansible
             dir: test/fixtures/_negative/ansible
+          - language: terraform
+            dir: test/fixtures/_negative/terraform
+          - language: nodejs
+            dir: test/fixtures/_negative/nodejs
     steps:
       - name: Checkout
         uses: actions/checkout@v7
